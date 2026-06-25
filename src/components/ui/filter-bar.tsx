@@ -1,36 +1,28 @@
 import { cn } from '@/lib/utils'
 
-interface FilterOption {
-  key: string
-  label: string
-}
-
 interface FilterBarProps {
-  options: FilterOption[]
-  value: string
-  onChange: (key: string) => void
+  options: string[]
+  active: string
+  onChange: (value: string) => void
 }
 
-export function FilterBar({ options, value, onChange }: FilterBarProps) {
+export function FilterBar({ options, active, onChange }: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      {options.map((opt) => {
-        const active = value === opt.key
-        return (
-          <button
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className={cn(
-              'rounded-full border px-3 py-[5px] text-[12.5px] font-semibold transition-colors',
-              active
-                ? 'border-[#11151C] bg-[#11151C] text-white'
-                : 'border-[#DCE0E6] bg-transparent text-[#5B6573] hover:border-text-muted hover:text-text-secondary'
-            )}
-          >
-            {opt.label}
-          </button>
-        )
-      })}
+      {options.map((opt) => (
+        <button
+          key={opt}
+          onClick={() => onChange(opt)}
+          className={cn(
+            'rounded-full border px-3 py-[5px] text-[12.5px] font-semibold transition-colors capitalize',
+            active === opt
+              ? 'border-accent bg-accent text-white'
+              : 'border-border-subtle bg-transparent text-text-muted hover:border-text-secondary hover:text-text-secondary'
+          )}
+        >
+          {opt}
+        </button>
+      ))}
     </div>
   )
 }

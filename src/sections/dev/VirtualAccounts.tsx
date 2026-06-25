@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -14,14 +14,14 @@ import { useAppStore } from '@/store/app.store'
 import { useDataStore, type VirtualAccount } from '@/store/data.store'
 import { type ColumnDef } from '@tanstack/react-table'
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function nextNuban(accounts: VirtualAccount[]) {
   const base = 9912004534
   return String(base + accounts.length)
 }
 
-// ─── Modals ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ProvisionModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [name, setName] = useState('')
@@ -39,16 +39,16 @@ function ProvisionModal({ open, onClose }: { open: boolean; onClose: () => void 
       tenant,
       nuban,
       name: name.trim() || customer?.name || 'New account',
-      customer: customer?.name ?? '—',
+      customer: customer?.name ?? 'â€”',
       status: 'active',
-      balance: '₦0.00',
+      balance: 'â‚¦0.00',
     })
     pushAudit({
       actor: 'Adaeze Okonkwo', role: 'Tenant Dev',
       action: 'Provisioned virtual account', resource: nuban,
       time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT',
     })
-    showToast(`Account provisioned — ${nuban}`)
+    showToast(`Account provisioned â€” ${nuban}`)
     setName(''); setCustomerId(''); onClose()
   }
 
@@ -71,9 +71,9 @@ function ProvisionModal({ open, onClose }: { open: boolean; onClose: () => void 
               onChange={(e) => setCustomerId(e.target.value)}
               className="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
             >
-              <option value="">Select customer…</option>
+              <option value="">Select customerâ€¦</option>
               {tenantCustomers.map((c) => (
-                <option key={c.id} value={c.id}>{c.name} — {c.doc}</option>
+                <option key={c.id} value={c.id}>{c.name} â€” {c.doc}</option>
               ))}
             </select>
           </div>
@@ -96,7 +96,7 @@ function RenameModal({ account, onClose }: { account: VirtualAccount | null; onC
     if (!account) return
     updateAccount(account.id, { name: value })
     pushAudit({ actor: 'Adaeze Okonkwo', role: 'Tenant Dev', action: 'Renamed virtual account', resource: account.nuban, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
-    showToast('Account renamed — NUBAN unchanged')
+    showToast('Account renamed â€” NUBAN unchanged')
     onClose()
   }
 
@@ -125,9 +125,9 @@ function CloseModal({ account, onClose }: { account: VirtualAccount | null; onCl
 
   function confirm() {
     if (!account) return
-    updateAccount(account.id, { status: 'closed', balance: '₦0.00' })
+    updateAccount(account.id, { status: 'closed', balance: 'â‚¦0.00' })
     pushAudit({ actor: 'Adaeze Okonkwo', role: 'Tenant Dev', action: 'Closed virtual account', resource: account.nuban, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
-    showToast(`Account ${account.nuban} closed — terminal state`)
+    showToast(`Account ${account.nuban} closed â€” terminal state`)
     onClose()
   }
 
@@ -140,7 +140,7 @@ function CloseModal({ account, onClose }: { account: VirtualAccount | null; onCl
         </DialogHeader>
         <DialogBody>
           <div className="rounded-xl border px-4 py-3 font-mono text-sm text-red-text" style={{ background: '#1C0A0A', borderColor: '#5C1A1A' }}>
-            {account?.nuban} — {account?.name}
+            {account?.nuban} â€” {account?.name}
           </div>
         </DialogBody>
         <DialogFooter>
@@ -152,7 +152,7 @@ function CloseModal({ account, onClose }: { account: VirtualAccount | null; onCl
   )
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function VirtualAccounts() {
   const { tenant } = useAppStore()
@@ -227,9 +227,9 @@ export function VirtualAccounts() {
         subtitle="Provision and manage NUBAN virtual accounts for your customers"
         actions={<Button size="sm" onClick={() => setProvisionOpen(true)}>Provision account</Button>}
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Card className="overflow-hidden">
-          <DataTable columns={columns} data={tenantAccounts} emptyMessage="No accounts yet — provision one above." />
+          <DataTable columns={columns} data={tenantAccounts} emptyMessage="No accounts yet â€” provision one above." />
         </Card>
       </div>
       <ProvisionModal open={provisionOpen} onClose={() => setProvisionOpen(false)} />
@@ -238,3 +238,4 @@ export function VirtualAccounts() {
     </SectionLayout>
   )
 }
+

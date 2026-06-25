@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -15,16 +15,16 @@ import { useAppStore } from '@/store/app.store'
 import { useDataStore, type ApiKey } from '@/store/data.store'
 import { type ColumnDef } from '@tanstack/react-table'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function genKey(prefix: string) {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let s = ''
   for (let i = 0; i < 32; i++) s += chars[Math.floor(Math.random() * chars.length)]
-  return `sk_live_${prefix.toLowerCase().replace(/\s+/g, '_')}…${s.slice(-4)}_${s}`
+  return `sk_live_${prefix.toLowerCase().replace(/\s+/g, '_')}â€¦${s.slice(-4)}_${s}`
 }
 
-// ─── Create key modal ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Create key modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateModal({
   open, onClose, onCreated,
@@ -36,12 +36,12 @@ function CreateModal({
   const scopes: { value: ApiKey['scope']; label: string; desc: string }[] = [
     { value: 'developer', label: 'Developer', desc: 'Account & transaction read/write' },
     { value: 'ops', label: 'Ops', desc: 'Suspense queue and KYC writes' },
-    { value: 'both', label: 'Full access', desc: 'All permissions — use with care' },
+    { value: 'both', label: 'Full access', desc: 'All permissions â€” use with care' },
   ]
 
   function confirm() {
     const fullKey = genKey(label || tenant)
-    const prefix = fullKey.split('_').slice(0, 3).join('_') + '…' + fullKey.slice(-3)
+    const prefix = fullKey.split('_').slice(0, 3).join('_') + 'â€¦' + fullKey.slice(-3)
     const id = `k${Date.now()}`
     addApiKey({ id, tenant, prefix, scope, created: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), lastUsed: 'Never' })
     pushAudit({ actor: 'Adaeze Okonkwo', role: 'Tenant Dev', action: `Created API key (${scope})`, resource: prefix, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
@@ -55,7 +55,7 @@ function CreateModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create API key</DialogTitle>
-          <DialogDescription>Keys are shown once — store them immediately in a secrets manager.</DialogDescription>
+          <DialogDescription>Keys are shown once â€” store them immediately in a secrets manager.</DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div>
@@ -92,7 +92,7 @@ function CreateModal({
   )
 }
 
-// ─── Revoke modal ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Revoke modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function RevokeModal({ apiKey, onClose }: { apiKey: ApiKey | null; onClose: () => void }) {
   const { removeApiKey, pushAudit } = useDataStore()
@@ -127,7 +127,7 @@ function RevokeModal({ apiKey, onClose }: { apiKey: ApiKey | null; onClose: () =
   )
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function ApiKeys() {
   const { tenant } = useAppStore()
@@ -186,9 +186,9 @@ export function ApiKeys() {
         subtitle="Create and revoke API keys scoped to developer or ops access"
         actions={<Button size="sm" onClick={() => setCreateOpen(true)}>Create key</Button>}
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Card className="overflow-hidden">
-          <DataTable columns={columns} data={tenantKeys} emptyMessage="No API keys — create one above." />
+          <DataTable columns={columns} data={tenantKeys} emptyMessage="No API keys â€” create one above." />
         </Card>
       </div>
       <CreateModal
@@ -202,10 +202,11 @@ export function ApiKeys() {
           open={!!revealKey}
           onClose={() => setRevealKey(null)}
           title="Your new API key"
-          subtitle={`Label: ${revealKey.label} — copy this now, it will not be shown again.`}
+          subtitle={`Label: ${revealKey.label} â€” copy this now, it will not be shown again.`}
           apiKey={revealKey.key}
         />
       )}
     </SectionLayout>
   )
 }
+

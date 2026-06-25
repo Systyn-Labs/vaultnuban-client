@@ -1,4 +1,4 @@
-import { PageHeader } from '@/components/layout/PageHeader'
+﻿import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -74,7 +74,7 @@ export function AuditLog() {
         title="Audit Log"
         subtitle="Immutable trail of all actions taken within this tenant scope"
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={visible} emptyMessage="No audit entries yet." />
         </Card>
@@ -82,3 +82,4 @@ export function AuditLog() {
     </SectionLayout>
   )
 }
+

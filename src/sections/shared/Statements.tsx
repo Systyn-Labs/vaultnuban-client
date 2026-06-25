@@ -1,4 +1,4 @@
-import { PageHeader } from '@/components/layout/PageHeader'
+﻿import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,7 @@ import { useAppStore } from '@/store/app.store'
 import { useDataStore, type Transaction } from '@/store/data.store'
 import { type ColumnDef } from '@tanstack/react-table'
 
-// ─── Build statement rows from transactions ───────────────────────────────────
+// â”€â”€â”€ Build statement rows from transactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface StatementRow extends Transaction {
   running: number
@@ -18,18 +18,18 @@ function buildStatement(txs: Transaction[]): StatementRow[] {
   const sorted = [...txs].sort((a, b) => a.time.localeCompare(b.time))
   let running = 0
   return sorted.map((tx) => {
-    const raw = parseFloat(tx.amount.replace(/[₦,]/g, '')) || 0
+    const raw = parseFloat(tx.amount.replace(/[â‚¦,]/g, '')) || 0
     running = tx.dir === 'credit' ? running + raw : running - raw
     return { ...tx, running }
   })
 }
 
-// ─── CSV export helper ────────────────────────────────────────────────────────
+// â”€â”€â”€ CSV export helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function exportCsv(rows: StatementRow[]) {
   const header = 'Session ID,NUBAN,Direction,Source,Amount,Narration,Time,Running Balance'
   const body = rows.map((r) =>
-    [r.session, r.nuban, r.dir, r.source, r.amount, `"${r.narration}"`, r.time, `₦${r.running.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`].join(',')
+    [r.session, r.nuban, r.dir, r.source, r.amount, `"${r.narration}"`, r.time, `â‚¦${r.running.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`].join(',')
   )
   const csv = [header, ...body].join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
@@ -41,7 +41,7 @@ function exportCsv(rows: StatementRow[]) {
   URL.revokeObjectURL(url)
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function Statements() {
   const { tenant } = useAppStore()
@@ -100,7 +100,7 @@ export function Statements() {
         const n = getValue() as number
         return (
           <span className={`font-mono text-[12.5px] font-semibold ${n < 0 ? 'text-red-text' : 'text-text-primary'}`}>
-            ₦{n.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+            â‚¦{n.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
           </span>
         )
       },
@@ -111,14 +111,14 @@ export function Statements() {
     <SectionLayout noPadding>
       <PageHeader
         title="Statements"
-        subtitle="Chronological ledger with running balance — export to CSV for reconciliation"
+        subtitle="Chronological ledger with running balance â€” export to CSV for reconciliation"
         actions={
           <Button variant="outline" size="sm" onClick={handleExport}>
             Export CSV
           </Button>
         }
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={rows} emptyMessage="No transactions recorded yet." />
         </Card>
@@ -126,3 +126,4 @@ export function Statements() {
     </SectionLayout>
   )
 }
+

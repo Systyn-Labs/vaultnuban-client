@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { useDataStore, type SuspenseItem } from '@/store/data.store'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
 
-// ─── Resolve modal ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Resolve modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Resolution = 'reassign' | 'refund'
 
@@ -30,10 +30,10 @@ function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: (
   function confirm() {
     if (!item) return
     const desc = resolution === 'reassign'
-      ? `Reassigned ${item.amount} → ${targetNuban || item.target}`
+      ? `Reassigned ${item.amount} â†’ ${targetNuban || item.target}`
       : `Refunded ${item.amount} to originator`
     removeSuspense(item.id)
-    pushAudit({ actor: 'Bisi Thomas', role: 'Tenant Ops', action: `Resolved suspense — ${resolution}`, resource: item.amount, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
+    pushAudit({ actor: 'Bisi Thomas', role: 'Tenant Ops', action: `Resolved suspense â€” ${resolution}`, resource: item.amount, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
     showToast(desc)
     onClose()
   }
@@ -49,7 +49,7 @@ function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: (
         <DialogHeader>
           <DialogTitle>Resolve suspense</DialogTitle>
           <DialogDescription>
-            {item?.amount} held for <strong>{item?.age}</strong> · reason: {item?.reason.replace(/_/g, ' ')}
+            {item?.amount} held for <strong>{item?.age}</strong> Â· reason: {item?.reason.replace(/_/g, ' ')}
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-3">
@@ -78,9 +78,9 @@ function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: (
                 onChange={(e) => setTargetNuban(e.target.value)}
                 className="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
               >
-                <option value="">Select account…</option>
+                <option value="">Select accountâ€¦</option>
                 {accounts.map((a) => (
-                  <option key={a.id} value={a.nuban}>{a.nuban} — {a.name}</option>
+                  <option key={a.id} value={a.nuban}>{a.nuban} â€” {a.name}</option>
                 ))}
               </select>
             </div>
@@ -95,7 +95,7 @@ function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: (
   )
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const REASON_FILTERS = ['All', 'unmatched', 'closed_account', 'amount_mismatch', 'tier_limit'] as const
 type ReasonFilter = (typeof REASON_FILTERS)[number]
@@ -157,14 +157,14 @@ export function SuspenseQueue() {
         title="Suspense Queue"
         subtitle="Unresolved inbound credits pending assignment or refund"
       />
-      <div className="px-6 pb-4">
+      <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-5">
         <FilterBar
           options={REASON_FILTERS.map((f) => f === 'All' ? 'All' : f.replace(/_/g, ' '))}
           active={filter === 'All' ? 'All' : filter.replace(/_/g, ' ')}
           onChange={(v) => setFilter(v === 'All' ? 'All' : v.replace(/ /g, '_') as ReasonFilter)}
         />
       </div>
-      <div className="px-6 pb-6">
+      <div className="px-4 pb-4 sm:px-6 sm:pb-6">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={visible} emptyMessage="No items in the suspense queue." />
         </Card>
@@ -173,3 +173,5 @@ export function SuspenseQueue() {
     </SectionLayout>
   )
 }
+
+

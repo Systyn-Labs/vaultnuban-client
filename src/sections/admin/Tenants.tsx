@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ import { useAppStore } from '@/store/app.store'
 import { useDataStore, type Tenant } from '@/store/data.store'
 import { type ColumnDef } from '@tanstack/react-table'
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function genKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -29,7 +29,7 @@ function genKey(): string {
   return out
 }
 
-// ─── Onboard modal ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Onboard modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface OnboardModalProps {
   open: boolean
@@ -92,7 +92,7 @@ function OnboardModal({ open, onClose, onCreated }: OnboardModalProps) {
   )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function Tenants() {
   const showToast = useAppStore((s) => s.showToast)
@@ -107,11 +107,11 @@ export function Tenants() {
       id: `tnt_${newKey}`,
       key: newKey,
       name,
-      contact: '—',
+      contact: 'â€”',
       customers: 0,
       accounts: 0,
-      suspense: '₦0',
-      webhook: '—',
+      suspense: 'â‚¦0',
+      webhook: 'â€”',
       lastActivity: 'just now',
       status: 'active',
     })
@@ -137,7 +137,7 @@ export function Tenants() {
     })
     showToast(
       t.status === 'active'
-        ? `${t.name} suspended — keys disabled`
+        ? `${t.name} suspended â€” keys disabled`
         : `${t.name} restored`
     )
   }
@@ -223,7 +223,7 @@ export function Tenants() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={tenants} emptyMessage="No tenants yet." />
         </Card>
@@ -240,10 +240,11 @@ export function Tenants() {
           open={!!revealKey}
           onClose={() => setRevealKey(null)}
           title="Tenant onboarded"
-          subtitle={`${revealKey.name} created — share this key securely with the integrator.`}
+          subtitle={`${revealKey.name} created â€” share this key securely with the integrator.`}
           apiKey={revealKey.key}
         />
       )}
     </SectionLayout>
   )
 }
+

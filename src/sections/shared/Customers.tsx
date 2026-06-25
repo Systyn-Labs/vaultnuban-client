@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -16,10 +16,10 @@ import { type ColumnDef } from '@tanstack/react-table'
 import { AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// ─── KYC Tier modal ───────────────────────────────────────────────────────────
+// â”€â”€â”€ KYC Tier modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const TIER_CAPS: Record<Customer['tier'], number> = { 'Tier 1': 50000, 'Tier 2': 500000, 'Tier 3': Infinity }
-const TIER_LABELS: Record<Customer['tier'], string> = { 'Tier 1': '₦50,000 / day', 'Tier 2': '₦500,000 / day', 'Tier 3': 'No limit' }
+const TIER_LABELS: Record<Customer['tier'], string> = { 'Tier 1': 'â‚¦50,000 / day', 'Tier 2': 'â‚¦500,000 / day', 'Tier 3': 'No limit' }
 
 function KycModal({ customer, onClose }: { customer: Customer | null; onClose: () => void }) {
   const [tier, setTier] = useState<Customer['tier']>(customer?.tier ?? 'Tier 1')
@@ -31,7 +31,7 @@ function KycModal({ customer, onClose }: { customer: Customer | null; onClose: (
   function confirm() {
     if (!customer) return
     updateCustomer(customer.id, { tier })
-    pushAudit({ actor: 'Bisi Thomas', role: 'Tenant Ops', action: `Updated KYC tier → ${tier}`, resource: customer.name, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
+    pushAudit({ actor: 'Bisi Thomas', role: 'Tenant Ops', action: `Updated KYC tier â†’ ${tier}`, resource: customer.name, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
     showToast(`${customer.name} set to ${tier}`)
     onClose()
   }
@@ -41,7 +41,7 @@ function KycModal({ customer, onClose }: { customer: Customer | null; onClose: (
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update KYC tier</DialogTitle>
-          <DialogDescription>{customer?.name} · {customer?.doc}</DialogDescription>
+          <DialogDescription>{customer?.name} Â· {customer?.doc}</DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-3">
           {tiers.map((t) => (
@@ -76,7 +76,7 @@ function KycModal({ customer, onClose }: { customer: Customer | null; onClose: (
   )
 }
 
-// ─── Create customer modal (dev only) ─────────────────────────────────────────
+// â”€â”€â”€ Create customer modal (dev only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [name, setName] = useState('')
@@ -87,7 +87,7 @@ function CreateModal({ open, onClose }: { open: boolean; onClose: () => void }) 
   const showToast = useAppStore((s) => s.showToast)
 
   function confirm() {
-    addCustomer({ id: `c${Date.now()}`, tenant, name: name.trim(), doc: `${docType} · ${docNum.trim()}`, tier: 'Tier 1', status: 'active', balanceNum: 0 })
+    addCustomer({ id: `c${Date.now()}`, tenant, name: name.trim(), doc: `${docType} Â· ${docNum.trim()}`, tier: 'Tier 1', status: 'active', balanceNum: 0 })
     pushAudit({ actor: 'Adaeze Okonkwo', role: 'Tenant Dev', action: 'Created customer', resource: name.trim(), time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
     showToast(`Customer ${name.trim()} created`)
     setName(''); setDocNum(''); onClose()
@@ -98,7 +98,7 @@ function CreateModal({ open, onClose }: { open: boolean; onClose: () => void }) 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add customer</DialogTitle>
-          <DialogDescription>New customers start at Tier 1 (₦50,000 / day).</DialogDescription>
+          <DialogDescription>New customers start at Tier 1 (â‚¦50,000 / day).</DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div>
@@ -129,7 +129,7 @@ function CreateModal({ open, onClose }: { open: boolean; onClose: () => void }) 
   )
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function Customers({ readonly }: { readonly: boolean }) {
   const { tenant } = useAppStore()
@@ -180,7 +180,7 @@ export function Customers({ readonly }: { readonly: boolean }) {
       header: 'Balance',
       cell: ({ getValue }) => {
         const n = getValue() as number
-        return <span className="font-mono text-[12.5px] text-text-primary">₦{n.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
+        return <span className="font-mono text-[12.5px] text-text-primary">â‚¦{n.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
       },
     },
     {
@@ -205,13 +205,13 @@ export function Customers({ readonly }: { readonly: boolean }) {
       <PageHeader
         title="Customers"
         subtitle={readonly
-          ? 'Read access with operational writes — update KYC tiers; create/delete is developer-only.'
-          : 'Full CRUD — create, edit and soft-deactivate customers and their identities.'}
+          ? 'Read access with operational writes â€” update KYC tiers; create/delete is developer-only.'
+          : 'Full CRUD â€” create, edit and soft-deactivate customers and their identities.'}
         actions={!readonly && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>Add customer</Button>
         )}
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={tenantCustomers} emptyMessage="No customers yet." />
         </Card>
@@ -221,3 +221,4 @@ export function Customers({ readonly }: { readonly: boolean }) {
     </SectionLayout>
   )
 }
+

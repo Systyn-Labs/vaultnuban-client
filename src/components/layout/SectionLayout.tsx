@@ -15,11 +15,11 @@ interface SectionLayoutProps {
  */
 export function SectionLayout({ children, className, noPadding }: SectionLayoutProps) {
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex flex-col h-full section-enter', className)}>
       {noPadding ? (
         children
       ) : (
-        <div className="px-6 py-6">{children}</div>
+        <div className="px-4 py-4 sm:px-6 sm:py-6">{children}</div>
       )}
     </div>
   )

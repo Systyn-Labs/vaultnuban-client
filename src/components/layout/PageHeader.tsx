@@ -13,7 +13,7 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
   return (
     <div
       className={cn(
-        'flex flex-col gap-1 border-b px-6 py-5 sm:flex-row sm:items-center sm:justify-between',
+        'flex flex-col gap-1 border-b px-4 py-4 sm:px-6 sm:py-5 sm:flex-row sm:items-center sm:justify-between',
         className
       )}
       style={{ borderColor: '#1E2D42' }}

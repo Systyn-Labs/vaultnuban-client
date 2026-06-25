@@ -43,6 +43,7 @@ function SectionContent() {
 }
 
 export function AppShell() {
+  const { role, section } = useAppStore()
   const openSidebarRef = useRef<() => void>(() => {})
   const [, forceUpdate] = useState(0)
 
@@ -60,8 +61,9 @@ export function AppShell() {
         {/* Mobile top bar */}
         <MobileTopBar onMenuClick={() => openSidebarRef.current()} />
 
-        {/* Scrollable content */}
+        {/* Scrollable content — key forces scroll-to-top on section change */}
         <main
+          key={`${role}-${section}`}
           className="flex-1 overflow-y-auto"
           style={{ background: '#111827' }}
         >

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { useDataStore, type Transaction } from '@/store/data.store'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Copy } from 'lucide-react'
 
-// ─── Webhook payload modal ────────────────────────────────────────────────────
+// â”€â”€â”€ Webhook payload modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function WebhookModal({ tx, onClose }: { tx: Transaction | null; onClose: () => void }) {
   const showToast = useAppStore((s) => s.showToast)
@@ -42,7 +42,7 @@ function WebhookModal({ tx, onClose }: { tx: Transaction | null; onClose: () => 
           <DialogTitle>Webhook payload</DialogTitle>
           <DialogDescription>
             <span className="font-mono">{tx.session}</span>
-            {' · '}
+            {' Â· '}
             <span className="text-text-muted">{tx.nuban}</span>
           </DialogDescription>
         </DialogHeader>
@@ -65,7 +65,7 @@ function WebhookModal({ tx, onClose }: { tx: Transaction | null; onClose: () => 
   )
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const FILTERS = ['All', 'Credit', 'Debit'] as const
 type Filter = (typeof FILTERS)[number]
@@ -149,14 +149,14 @@ export function Transactions() {
         title="Transactions"
         subtitle="Real-time ledger of all credits and debits across your virtual accounts"
       />
-      <div className="px-6 pb-4">
+      <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-5">
         <FilterBar
           options={[...FILTERS]}
           active={filter}
           onChange={(v) => setFilter(v as Filter)}
         />
       </div>
-      <div className="px-6 pb-6">
+      <div className="px-4 pb-4 sm:px-6 sm:pb-6">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={visible} emptyMessage="No transactions match this filter." />
         </Card>
@@ -165,3 +165,5 @@ export function Transactions() {
     </SectionLayout>
   )
 }
+
+
