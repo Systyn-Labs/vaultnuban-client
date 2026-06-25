@@ -16,7 +16,7 @@ export function Card({ className, ...props }: CardProps) {
 export function CardHeader({ className, ...props }: CardProps) {
   return (
     <div
-      className={cn('border-b px-5 py-4', className)}
+      className={cn('border-b px-6 py-5', className)}
       style={{ borderColor: '#1E2D42' }}
       {...props}
     />
@@ -24,9 +24,9 @@ export function CardHeader({ className, ...props }: CardProps) {
 }
 
 export function CardTitle({ className, ...props }: CardProps) {
-  return <p className={cn('text-[13.5px] font-semibold text-text-primary', className)} {...props} />
+  return <p className={cn('text-[14px] font-semibold text-text-primary', className)} {...props} />
 }
 
 export function CardBody({ className, ...props }: CardProps) {
-  return <div className={cn('p-5', className)} {...props} />
+  return <div className={cn('p-6', className)} {...props} />
 }

@@ -186,7 +186,7 @@ export function ApiKeys() {
         subtitle="Create and revoke API keys scoped to developer or ops access"
         actions={<Button size="sm" onClick={() => setCreateOpen(true)}>Create key</Button>}
       />
-      <div className="p-4 sm:p-6">
+      <div className="p-6 sm:p-8">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={tenantKeys} emptyMessage="No API keys â€” create one above." />
         </Card>
@@ -209,4 +209,5 @@ export function ApiKeys() {
     </SectionLayout>
   )
 }
+
 

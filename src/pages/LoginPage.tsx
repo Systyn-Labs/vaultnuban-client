@@ -115,11 +115,11 @@ export function LoginPage() {
     >
       {/* Card */}
       <div
-        className="w-full max-w-sm rounded-2xl border px-8 py-10"
+        className="w-full max-w-sm rounded-2xl border px-8 py-12"
         style={{ background: '#111827', borderColor: '#1E2D42' }}
       >
         {/* Branding */}
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+        <div className="mb-9 flex flex-col items-center gap-4 text-center">
           <VLogo size={52} />
           <div>
             <h1 className="text-[20px] font-bold tracking-tight text-text-primary">VaultNUBAN</h1>

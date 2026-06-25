@@ -156,7 +156,7 @@ export function Transactions() {
           onChange={(v) => setFilter(v as Filter)}
         />
       </div>
-      <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="px-6 pb-6 sm:px-8 sm:pb-8">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={visible} emptyMessage="No transactions match this filter." />
         </Card>
@@ -165,5 +165,6 @@ export function Transactions() {
     </SectionLayout>
   )
 }
+
 
 

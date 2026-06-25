@@ -74,7 +74,7 @@ export function AuditLog() {
         title="Audit Log"
         subtitle="Immutable trail of all actions taken within this tenant scope"
       />
-      <div className="p-4 sm:p-6">
+      <div className="p-6 sm:p-8">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={visible} emptyMessage="No audit entries yet." />
         </Card>
@@ -82,4 +82,5 @@ export function AuditLog() {
     </SectionLayout>
   )
 }
+
 

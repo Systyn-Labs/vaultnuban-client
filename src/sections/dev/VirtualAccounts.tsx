@@ -227,7 +227,7 @@ export function VirtualAccounts() {
         subtitle="Provision and manage NUBAN virtual accounts for your customers"
         actions={<Button size="sm" onClick={() => setProvisionOpen(true)}>Provision account</Button>}
       />
-      <div className="p-4 sm:p-6">
+      <div className="p-6 sm:p-8">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={tenantAccounts} emptyMessage="No accounts yet â€” provision one above." />
         </Card>
@@ -238,4 +238,5 @@ export function VirtualAccounts() {
     </SectionLayout>
   )
 }
+
 

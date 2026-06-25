@@ -118,7 +118,7 @@ export function Statements() {
           </Button>
         }
       />
-      <div className="p-4 sm:p-6">
+      <div className="p-6 sm:p-8">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={rows} emptyMessage="No transactions recorded yet." />
         </Card>
@@ -126,4 +126,5 @@ export function Statements() {
     </SectionLayout>
   )
 }
+
 

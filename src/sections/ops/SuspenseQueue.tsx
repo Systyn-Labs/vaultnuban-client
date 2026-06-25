@@ -164,7 +164,7 @@ export function SuspenseQueue() {
           onChange={(v) => setFilter(v === 'All' ? 'All' : v.replace(/ /g, '_') as ReasonFilter)}
         />
       </div>
-      <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="px-6 pb-6 sm:px-8 sm:pb-8">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={visible} emptyMessage="No items in the suspense queue." />
         </Card>
@@ -173,5 +173,6 @@ export function SuspenseQueue() {
     </SectionLayout>
   )
 }
+
 
 

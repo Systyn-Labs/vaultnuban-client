@@ -113,10 +113,10 @@ export function GlobalHealth() {
         }
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-6 sm:p-8">
         {/* Invariant banner */}
         <div
-          className="flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:gap-6"
+          className="flex flex-col gap-4 rounded-2xl border p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-7"
           style={{ background: '#1C2638', borderColor: '#1E2D42' }}
         >
           {/* Check icon circle */}
@@ -163,9 +163,9 @@ export function GlobalHealth() {
         </div>
 
         {/* Metric cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
           {METRIC_CARDS.map((m) => (
-            <Card key={m.label} className="p-[18px]">
+            <Card key={m.label} className="p-6">
               <p className="text-[10.5px] font-bold uppercase tracking-wider text-text-muted">
                 {m.label}
               </p>
@@ -180,7 +180,7 @@ export function GlobalHealth() {
         {/* Tenant health table */}
         <Card className="overflow-hidden">
           <div
-            className="border-b px-5 py-4 text-[13.5px] font-semibold text-text-primary"
+            className="border-b px-6 py-5 text-[14px] font-semibold text-text-primary"
             style={{ borderColor: '#1E2D42' }}
           >
             Tenant health

@@ -211,7 +211,7 @@ export function Customers({ readonly }: { readonly: boolean }) {
           <Button size="sm" onClick={() => setCreateOpen(true)}>Add customer</Button>
         )}
       />
-      <div className="p-4 sm:p-6">
+      <div className="p-6 sm:p-8">
         <Card className="overflow-hidden">
           <DataTable columns={columns} data={tenantCustomers} emptyMessage="No customers yet." />
         </Card>
@@ -221,4 +221,5 @@ export function Customers({ readonly }: { readonly: boolean }) {
     </SectionLayout>
   )
 }
+
 

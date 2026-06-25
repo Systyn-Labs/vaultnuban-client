@@ -30,7 +30,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = 'No records fou
               {hg.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted first:pl-6 last:pr-6"
+                  className="px-4 py-4 text-left text-[11px] font-semibold uppercase tracking-wider text-text-muted first:pl-6 last:pr-6"
                 >
                   {header.isPlaceholder
                     ? null
@@ -62,7 +62,7 @@ export function DataTable<TData>({ columns, data, emptyMessage = 'No records fou
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="px-4 py-3 text-[13px] text-text-primary first:pl-6 last:pr-6"
+                    className="px-4 py-4 text-[13px] text-text-primary first:pl-6 last:pr-6"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>

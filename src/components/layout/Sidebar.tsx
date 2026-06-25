@@ -148,7 +148,7 @@ function NavItems({ onClose }: { onClose?: () => void }) {
               onClose?.()
             }}
             className={cn(
-              'mb-0.5 flex w-full items-center gap-[11px] rounded-lg px-3 py-[9px] text-[13.5px] font-medium text-left transition-colors duration-100',
+              'mb-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] font-medium text-left transition-colors duration-100',
               active
                 ? 'bg-[#1C2638] text-white'
                 : 'text-[#9BA6B8] hover:bg-[#1C2638]/60 hover:text-text-primary'

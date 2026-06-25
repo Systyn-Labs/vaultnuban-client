@@ -89,7 +89,7 @@ export function CrossTenantSuspense() {
         subtitle="Rolled-up view of unresolved suspense items across all tenants"
       />
 
-      <div className="space-y-5 p-6">
+      <div className="space-y-6 p-6 sm:p-8">
         {/* Read-only notice */}
         <div
           className="flex items-start gap-3 rounded-xl border px-4 py-3 text-[12.5px] font-medium"
