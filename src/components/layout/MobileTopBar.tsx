@@ -1,5 +1,6 @@
 import { Menu } from 'lucide-react'
 import { useAppStore } from '@/store/app.store'
+import { useAuthStore } from '@/store/auth.store'
 import { NAV_DEFS, ROLE_META } from './Sidebar'
 
 interface MobileTopBarProps {
@@ -9,8 +10,12 @@ interface MobileTopBarProps {
 export function MobileTopBar({ onMenuClick }: MobileTopBarProps) {
   const { role, section } = useAppStore()
   const meta = ROLE_META[role]
+  const authUser = useAuthStore((s) => s.user)
   const nav = NAV_DEFS[role]
   const currentNav = nav.find((n) => n.key === section)
+
+  const initials = authUser?.initials ?? meta.initials
+  const roleLabel = authUser?.roleLabel ?? meta.label
 
   return (
     <div
@@ -32,7 +37,7 @@ export function MobileTopBar({ onMenuClick }: MobileTopBarProps) {
         <p className="truncate text-sm font-semibold text-text-primary">
           {currentNav?.label ?? 'Dashboard'}
         </p>
-        <p className="truncate text-[11px] text-text-muted">{meta.label}</p>
+        <p className="truncate text-[11px] text-text-muted">{roleLabel}</p>
       </div>
 
       {/* User avatar */}
@@ -40,7 +45,7 @@ export function MobileTopBar({ onMenuClick }: MobileTopBarProps) {
         className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
         style={{ background: 'rgba(67,56,202,0.2)', color: '#818CF8' }}
       >
-        {meta.initials}
+        {initials}
       </div>
     </div>
   )

@@ -11,12 +11,13 @@ import {
   Clock,
   Layers,
   ChevronDown,
-  Menu,
+  LogOut,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore, type Role, type Section } from '@/store/app.store'
 import { useDataStore } from '@/store/data.store'
+import { useAuthStore } from '@/store/auth.store'
 
 // ─── Nav definitions ─────────────────────────────────────────────────────────
 
@@ -169,6 +170,12 @@ function NavItems({ onClose }: { onClose?: () => void }) {
 function UserFooter() {
   const { role } = useAppStore()
   const meta = ROLE_META[role]
+  const authUser = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
+
+  const displayName = authUser?.name ?? meta.user
+  const displayInitials = authUser?.initials ?? meta.initials
+  const displayLabel = authUser?.roleLabel ?? meta.label
 
   return (
     <div className="border-t border-[#1E2D42] px-4 py-[14px]">
@@ -177,12 +184,20 @@ function UserFooter() {
           className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
           style={{ background: 'rgba(67,56,202,0.2)', color: '#818CF8' }}
         >
-          {meta.initials}
+          {displayInitials}
         </div>
-        <div className="min-w-0">
-          <p className="truncate text-[13px] font-medium text-text-primary">{meta.user}</p>
-          <p className="truncate text-[11px] text-text-muted">{meta.label}</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium text-text-primary">{displayName}</p>
+          <p className="truncate text-[11px] text-text-muted">{displayLabel}</p>
         </div>
+        <button
+          onClick={logout}
+          title="Sign out"
+          className="flex-shrink-0 rounded-md p-1.5 text-text-muted transition-colors hover:bg-surface-2 hover:text-red-text"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   )
