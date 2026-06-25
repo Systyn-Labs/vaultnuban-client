@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 
 @layer base {
   :root {
@@ -8,17 +7,22 @@
   }
 
   * {
-    @apply border-border;
+    border-color: #1E2D42;
   }
 
   html {
-    @apply bg-canvas text-text-primary;
+    background: #0E1525;
+    color: #E7EBF2;
+    font-family: Inter, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-canvas text-text-primary font-sans min-h-screen;
+    background: #0E1525;
+    color: #E7EBF2;
+    font-family: Inter, system-ui, sans-serif;
+    min-height: 100vh;
   }
 
   /* Scrollbar styling */
@@ -30,10 +34,11 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
+    background: #1E2D42;
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-border-subtle;
+    background: #2A3A52;
   }
 }
 
