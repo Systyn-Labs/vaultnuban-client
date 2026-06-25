@@ -52,12 +52,12 @@ export const ROLE_META: Record<Role, { label: string; user: string; initials: st
 function Logo() {
   return (
     <div className="flex items-center gap-3">
-      <div
-        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
-        style={{ background: '#4338CA' }}
-      >
-        <span className="font-mono text-lg font-bold leading-none text-white">V</span>
-      </div>
+      {/* V-mark: two geometric arms echoing Systyn Labs brand language */}
+      <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true" className="flex-shrink-0">
+        <rect width="64" height="64" rx="12" fill="#4338CA"/>
+        <path d="M14,10 L27,10 L34,50 L21,50 Z" fill="#F6F2E9"/>
+        <path d="M50,10 L37,10 L30,50 L43,50 Z" fill="rgba(255,255,255,0.82)"/>
+      </svg>
       <div>
         <p className="text-[13.5px] font-bold tracking-tight text-text-primary">VaultNUBAN</p>
         <p className="font-mono text-[10px] leading-tight text-text-muted">Σ debits = Σ credits ✓</p>

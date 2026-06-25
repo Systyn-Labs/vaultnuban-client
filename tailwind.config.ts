@@ -18,6 +18,10 @@ const config: Config = {
         'text-primary': '#E7EBF2',
         'text-secondary': '#9BA6B8',
         'text-muted': '#6B7689',
+        // Brand heritage (Systyn Labs)
+        brand: '#D99A2B',
+        'brand-muted': 'rgba(217,154,43,0.15)',
+        cream: '#F6F2E9',
         // Status colors
         'green-bg': '#E3F4EE',
         'green-text': '#0E7A5A',

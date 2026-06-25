@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#4338CA"/>
-  <text x="16" y="23" font-family="monospace" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">V</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#4338CA"/>
+  <!-- Left arm: cream -->
+  <path d="M14,10 L27,10 L34,50 L21,50 Z" fill="#F6F2E9"/>
+  <!-- Right arm: amber/white tint -->
+  <path d="M50,10 L37,10 L30,50 L43,50 Z" fill="rgba(255,255,255,0.85)"/>
 </svg>
