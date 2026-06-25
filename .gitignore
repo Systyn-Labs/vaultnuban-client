@@ -25,3 +25,6 @@ dist-ssr
 
 # TanStack Router generated file
 src/routeTree.gen.ts
+
+# Wrangler generated files (contain local/OS-specific paths)
+.wrangler/
