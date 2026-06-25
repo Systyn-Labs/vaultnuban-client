@@ -1,4 +1,6 @@
-import { Sidebar } from './Sidebar'
+import { useCallback, useRef, useState } from 'react'
+import { SidebarWithRef } from './Sidebar'
+import { MobileTopBar } from './MobileTopBar'
 import { Toaster } from '@/components/ui/toast'
 import { useAppStore } from '@/store/app.store'
 
@@ -41,15 +43,32 @@ function SectionContent() {
 }
 
 export function AppShell() {
+  const openSidebarRef = useRef<() => void>(() => {})
+  const [, forceUpdate] = useState(0)
+
+  const registerOpen = useCallback((fn: () => void) => {
+    openSidebarRef.current = fn
+    forceUpdate((n) => n + 1)
+  }, [])
+
   return (
-    <div className="flex h-screen overflow-hidden bg-canvas">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        {/* Mobile top padding for hamburger */}
-        <div className="pt-16 lg:pt-0">
+    <div className="flex h-screen overflow-hidden" style={{ background: '#0E1525' }}>
+      <SidebarWithRef registerOpen={registerOpen} />
+
+      {/* Main content column */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Mobile top bar */}
+        <MobileTopBar onMenuClick={() => openSidebarRef.current()} />
+
+        {/* Scrollable content */}
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{ background: '#111827' }}
+        >
           <SectionContent />
-        </div>
-      </main>
+        </main>
+      </div>
+
       <Toaster />
     </div>
   )
