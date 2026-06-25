@@ -151,7 +151,8 @@ export function ApiKeys() {
       header: 'Scope',
       cell: ({ getValue }) => {
         const s = getValue() as ApiKey['scope']
-        return <Badge variant={s}>{s}</Badge>
+        const v = s === 'developer' ? 'dev' : s
+        return <Badge variant={v}>{s}</Badge>
       },
     },
     {

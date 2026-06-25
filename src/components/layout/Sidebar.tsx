@@ -284,8 +284,6 @@ export function Sidebar() {
   )
 }
 
-// Export setter so MobileTopBar can open it without prop-drilling
-let _setMobileOpen: React.Dispatch<React.SetStateAction<boolean>> | null = null
 
 export function SidebarWithRef({
   registerOpen,
@@ -293,7 +291,6 @@ export function SidebarWithRef({
   registerOpen: (fn: () => void) => void
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  _setMobileOpen = setMobileOpen
 
   React.useEffect(() => {
     registerOpen(() => setMobileOpen(true))
