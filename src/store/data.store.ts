@@ -109,6 +109,9 @@ const seedTransactions: Transaction[] = [
   { id: 'tx4', tenant: 'acme', nuban: '9912004535', amount: '₦25,700.00', dir: 'debit', source: 'sweep', narration: 'Transfer to Zenith · self', session: 'SES20240622001', time: '2026-06-22T16:30' },
   { id: 'tx5', tenant: 'acme', nuban: '9912004537', amount: '₦55,100.00', dir: 'credit', source: 'sweep', narration: 'Sweep post · batch 14', session: 'SES20240623001', time: '2026-06-23T14:30' },
   { id: 'tx6', tenant: 'bridger', nuban: '9912004539', amount: '₦73,000.00', dir: 'credit', source: 'webhook', narration: 'Inbound · UBA', session: 'SES20240620001', time: '2026-06-20T11:00' },
+  { id: 'tx7', tenant: 'acme', nuban: '9912004534', amount: '₦40,000.00', dir: 'credit', source: 'sweep', narration: 'Sweep recovery · missed webhook', session: 'SES20240625001', time: '2026-06-25T08:14' },
+  { id: 'tx8', tenant: 'acme', nuban: '9912004535', amount: '₦18,250.00', dir: 'credit', source: 'sweep', narration: 'Sweep recovery · missed webhook', session: 'SES20240625002', time: '2026-06-25T08:16' },
+  { id: 'tx9', tenant: 'acme', nuban: '9912004538', amount: '₦80,000.00', dir: 'credit', source: 'sweep', narration: 'Sweep · closed NUBAN → suspense (s2)', session: 'SES20240625003', time: '2026-06-25T14:31' },
 ]
 
 const seedSuspense: SuspenseItem[] = [

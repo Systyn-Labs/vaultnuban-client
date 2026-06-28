@@ -233,6 +233,22 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       {/* Nav */}
       <NavItems onClose={onClose} />
 
+      {/* Docs link */}
+      <div className="px-3 pb-2">
+        <a
+          href="https://vaultnuban-docs.pages.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-text-muted transition-colors hover:bg-[#1C2638]/60 hover:text-text-primary"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          <span>API Docs →</span>
+        </a>
+      </div>
+
       {/* User footer */}
       <UserFooter />
     </div>

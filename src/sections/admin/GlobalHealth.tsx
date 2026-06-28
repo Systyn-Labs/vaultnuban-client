@@ -151,7 +151,7 @@ export function GlobalHealth() {
             </div>
           </div>
 
-          {/* Last checked */}
+          {/* Last checked + CI link */}
           <div className="flex-shrink-0 sm:text-right">
             <p className="text-[10.5px] font-semibold uppercase tracking-wider text-text-muted">
               Last checked
@@ -159,6 +159,17 @@ export function GlobalHealth() {
             <p className="mt-1 font-mono text-[14px] font-semibold text-text-primary">
               14:32:07 WAT
             </p>
+            <a
+              href="https://github.com/systynlabs/vaultnuban/actions/workflows/ci.yml"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-green-text transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z" />
+              </svg>
+              Verified by CI harness on every push →
+            </a>
           </div>
         </div>
 
