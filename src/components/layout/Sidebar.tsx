@@ -67,31 +67,6 @@ function Logo() {
   )
 }
 
-// ─── Role Switcher ────────────────────────────────────────────────────────────
-
-function RoleSwitcher() {
-  const { role, setRole } = useAppStore()
-
-  return (
-    <div className="mx-3 mb-4 flex rounded-lg p-[3px]" style={{ background: '#1C2638' }}>
-      {(['dev', 'ops', 'admin'] as Role[]).map((r) => (
-        <button
-          key={r}
-          onClick={() => setRole(r)}
-          className={cn(
-            'flex-1 rounded-md py-[7px] text-xs font-semibold transition-all duration-150',
-            role === r
-              ? 'bg-canvas text-text-primary shadow-sm'
-              : 'text-[#5B6573] hover:text-text-secondary'
-          )}
-        >
-          {r === 'dev' ? 'Developer' : r === 'ops' ? 'Ops' : 'Admin'}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 // ─── Tenant Selector ──────────────────────────────────────────────────────────
 
 function TenantSelector() {
@@ -223,9 +198,6 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           </button>
         )}
       </div>
-
-      {/* Role switcher */}
-      <RoleSwitcher />
 
       {/* Tenant selector (dev + ops only) */}
       {isTenantUser && <TenantSelector />}

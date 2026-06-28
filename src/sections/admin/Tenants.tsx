@@ -1,4 +1,3 @@
-﻿import { useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -16,44 +15,57 @@ import {
   DialogBody,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { useEffect, useState } from 'react'
 import { useAppStore } from '@/store/app.store'
 import { useDataStore, type Tenant } from '@/store/data.store'
+import { adminApi } from '@/lib/api'
 import { type ColumnDef } from '@tanstack/react-table'
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function genKey(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let out = 'sk_live_'
-  for (let i = 0; i < 32; i++) out += chars[Math.floor(Math.random() * chars.length)]
-  return out
-}
-
-// â”€â”€â”€ Onboard modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Onboard modal ────────────────────────────────────────────────────────────
 
 interface OnboardModalProps {
   open: boolean
   onClose: () => void
-  onCreated: (name: string, key: string) => void
+  onCreated: (tenantName: string, tenantId: string, apiKey: string) => void
 }
 
 function OnboardModal({ open, onClose, onCreated }: OnboardModalProps) {
-  const [name, setName] = useState('')
-  const [contact, setContact] = useState('')
+  const [tenantName, setTenantName] = useState('')
+  const [devName, setDevName] = useState('')
+  const [devEmail, setDevEmail] = useState('')
+  const [devPassword, setDevPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleConfirm() {
-    onCreated(name.trim() || 'New Tenant', genKey())
-    setName('')
-    setContact('')
+  function reset() {
+    setTenantName(''); setDevName(''); setDevEmail(''); setDevPassword('')
+    setError(null); setLoading(false)
   }
 
+  async function handleConfirm() {
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await adminApi.onboard(tenantName.trim(), [
+        { name: devName.trim(), email: devEmail.trim(), password: devPassword, role: 'dev' },
+      ])
+      onCreated(res.tenant_name, res.tenant_id, res.api_key)
+      reset()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Onboard failed')
+      setLoading(false)
+    }
+  }
+
+  const valid = tenantName.trim() && devName.trim() && devEmail.trim() && devPassword.length >= 8
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { reset(); onClose() } }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Onboard tenant</DialogTitle>
           <DialogDescription>
-            Creates the tenant and issues its first API key.
+            Creates the tenant, issues its first API key, and provisions the initial developer account.
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-4">
@@ -62,29 +74,58 @@ function OnboardModal({ open, onClose, onCreated }: OnboardModalProps) {
               Business name
             </label>
             <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={tenantName}
+              onChange={(e) => setTenantName(e.target.value)}
               placeholder="e.g. Kola Foods Ltd"
+              disabled={loading}
+            />
+          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted pt-2">
+            Developer account
+          </p>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+              Full name
+            </label>
+            <Input
+              value={devName}
+              onChange={(e) => setDevName(e.target.value)}
+              placeholder="e.g. Kola Adeyemi"
+              disabled={loading}
             />
           </div>
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-text-muted">
-              Contact email
+              Email
             </label>
             <Input
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
+              value={devEmail}
+              onChange={(e) => setDevEmail(e.target.value)}
               placeholder="dev@kolafoods.ng"
               type="email"
+              disabled={loading}
             />
           </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+              Password
+            </label>
+            <Input
+              value={devPassword}
+              onChange={(e) => setDevPassword(e.target.value)}
+              placeholder="Min 8 characters"
+              type="password"
+              disabled={loading}
+            />
+          </div>
+          {error && <p className="text-[12px] text-destructive">{error}</p>}
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={() => { reset(); onClose() }} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={!name.trim()}>
-            Create &amp; issue key
+          <Button onClick={handleConfirm} disabled={!valid || loading}>
+            {loading ? 'Creating…' : 'Create & issue key'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -92,29 +133,52 @@ function OnboardModal({ open, onClose, onCreated }: OnboardModalProps) {
   )
 }
 
-// â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Main component â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export function Tenants() {
   const showToast = useAppStore((s) => s.showToast)
-  const { tenants, addTenant, toggleTenant, pushAudit } = useDataStore()
+  const { addTenant, toggleTenant, pushAudit } = useDataStore()
 
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [loadingTenants, setLoadingTenants] = useState(true)
   const [onboardOpen, setOnboardOpen] = useState(false)
   const [revealKey, setRevealKey] = useState<{ name: string; key: string } | null>(null)
 
-  function handleOnboard(name: string, key: string) {
-    const newKey = `tnt_${Date.now()}`
-    addTenant({
-      id: `tnt_${newKey}`,
-      key: newKey,
+  useEffect(() => {
+    adminApi.listTenants()
+      .then((res) => {
+        setTenants(res.data.map((t) => ({
+          id: t.id,
+          key: '',
+          name: t.name,
+          contact: '—',
+          customers: 0,
+          accounts: 0,
+          suspense: '₦0',
+          webhook: '—',
+          lastActivity: new Date(t.created_at).toLocaleDateString('en-GB'),
+          status: 'active' as const,
+        })))
+      })
+      .catch(() => {})
+      .finally(() => setLoadingTenants(false))
+  }, [])
+
+  function handleOnboard(name: string, tenantId: string, key: string) {
+    const newTenant: Tenant = {
+      id: tenantId,
+      key,
       name,
-      contact: 'â€”',
+      contact: '—',
       customers: 0,
       accounts: 0,
-      suspense: 'â‚¦0',
-      webhook: 'â€”',
+      suspense: '₦0',
+      webhook: '—',
       lastActivity: 'just now',
       status: 'active',
-    })
+    }
+    setTenants((prev) => [...prev, newTenant])
+    addTenant(newTenant)
     pushAudit({
       actor: 'Systyn Operator',
       role: 'Platform Admin',
@@ -127,6 +191,7 @@ export function Tenants() {
   }
 
   function handleToggle(t: Tenant) {
+    setTenants((prev) => prev.map((x) => x.id === t.id ? { ...x, status: x.status === 'active' ? 'suspended' : 'active' } : x))
     toggleTenant(t.id)
     pushAudit({
       actor: 'Systyn Operator',
@@ -137,7 +202,7 @@ export function Tenants() {
     })
     showToast(
       t.status === 'active'
-        ? `${t.name} suspended â€” keys disabled`
+        ? `${t.name} suspended â€" keys disabled`
         : `${t.name} restored`
     )
   }
@@ -225,14 +290,14 @@ export function Tenants() {
 
       <div className="p-6 sm:p-8">
         <Card className="overflow-hidden">
-          <DataTable columns={columns} data={tenants} emptyMessage="No tenants yet." />
+          <DataTable columns={columns} data={tenants} emptyMessage={loadingTenants ? 'Loading…' : 'No tenants yet.'} />
         </Card>
       </div>
 
       <OnboardModal
         open={onboardOpen}
         onClose={() => setOnboardOpen(false)}
-        onCreated={handleOnboard}
+        onCreated={(name, tenantId, key) => handleOnboard(name, tenantId, key)}
       />
 
       {revealKey && (
@@ -240,7 +305,7 @@ export function Tenants() {
           open={!!revealKey}
           onClose={() => setRevealKey(null)}
           title="Tenant onboarded"
-          subtitle={`${revealKey.name} created â€” share this key securely with the integrator.`}
+          subtitle={`${revealKey.name} created â€" share this key securely with the integrator.`}
           apiKey={revealKey.key}
         />
       )}

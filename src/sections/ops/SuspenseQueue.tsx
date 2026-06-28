@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -11,31 +11,71 @@ import {
   DialogDescription, DialogBody, DialogFooter,
 } from '@/components/ui/dialog'
 import { useAppStore } from '@/store/app.store'
-import { useDataStore, type SuspenseItem } from '@/store/data.store'
+import { useDataStore } from '@/store/data.store'
+import { suspenseApi, type ApiSuspenseItem } from '@/lib/api'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
 
-// â”€â”€â”€ Resolve modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatKobo(kobo: number): string {
+  return '₦' + (kobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 })
+}
+
+function timeAgo(iso: string): string {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (diff < 60) return `${diff}s`
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}m`
+  return `${Math.floor(diff / 86400)}d`
+}
+
+// ─── Resolve modal ────────────────────────────────────────────────────────────
 
 type Resolution = 'reassign' | 'refund'
 
-function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: () => void }) {
+function ResolveModal({ item, onClose, onResolved }: {
+  item: ApiSuspenseItem | null
+  onClose: () => void
+  onResolved: (id: string) => void
+}) {
   const [resolution, setResolution] = useState<Resolution>('reassign')
-  const [targetNuban, setTargetNuban] = useState('')
-  const { removeSuspense, pushAudit } = useDataStore()
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const showToast = useAppStore((s) => s.showToast)
-  const { tenant } = useAppStore()
-  const accounts = useDataStore((s) => s.accounts).filter((a) => a.tenant === tenant && a.status === 'active')
+  const { pushAudit } = useDataStore()
 
-  function confirm() {
+  useEffect(() => { setError(null); setNotes('') }, [item])
+
+  async function confirm() {
     if (!item) return
-    const desc = resolution === 'reassign'
-      ? `Reassigned ${item.amount} â†’ ${targetNuban || item.target}`
-      : `Refunded ${item.amount} to originator`
-    removeSuspense(item.id)
-    pushAudit({ actor: 'Bisi Thomas', role: 'Tenant Ops', action: `Resolved suspense â€” ${resolution}`, resource: item.amount, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT' })
-    showToast(desc)
-    onClose()
+    setLoading(true)
+    setError(null)
+    try {
+      await suspenseApi.resolve(item.id, {
+        resolution,
+        notes: notes || (resolution === 'reassign' ? 'Reassigned via dashboard' : 'Refunded via dashboard'),
+      })
+      const amtStr = item.amount_kobo ? formatKobo(item.amount_kobo) : item.transaction_id.slice(0, 8)
+      const desc = resolution === 'reassign'
+        ? `Reassigned ${amtStr} → ${item.nuban || '—'}`
+        : `Refunded ${amtStr} to originator`
+      pushAudit({
+        actor: 'Bisi Thomas',
+        role: 'Tenant Ops',
+        action: `Resolved suspense — ${resolution}`,
+        resource: amtStr,
+        time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' WAT',
+      })
+      showToast(desc)
+      onResolved(item.id)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resolve')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const options: { value: Resolution; label: string; desc: string }[] = [
@@ -43,13 +83,16 @@ function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: (
     { value: 'refund', label: 'Refund to originator', desc: 'Return the funds via NIP reversal' },
   ]
 
+  const amtDisplay = item?.amount_kobo ? formatKobo(item.amount_kobo) : '—'
+  const age = item ? timeAgo(item.created_at) : '—'
+
   return (
     <Dialog open={!!item} onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Resolve suspense</DialogTitle>
           <DialogDescription>
-            {item?.amount} held for <strong>{item?.age}</strong> Â· reason: {item?.reason.replace(/_/g, ' ')}
+            {amtDisplay} held for <strong>{age}</strong> · reason: {item?.reason.replace(/_/g, ' ')}
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-3">
@@ -57,6 +100,7 @@ function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: (
             <button
               key={o.value}
               onClick={() => setResolution(o.value)}
+              disabled={loading}
               className={cn(
                 'flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors',
                 resolution === o.value ? 'border-accent bg-accent/10' : 'border-border bg-surface-2 hover:border-border-subtle'
@@ -69,75 +113,73 @@ function ResolveModal({ item, onClose }: { item: SuspenseItem | null; onClose: (
               {resolution === o.value && <div className="h-2 w-2 rounded-full bg-accent" />}
             </button>
           ))}
-
-          {resolution === 'reassign' && (
-            <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-text-muted">Target NUBAN</label>
-              <select
-                value={targetNuban}
-                onChange={(e) => setTargetNuban(e.target.value)}
-                className="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-              >
-                <option value="">Select accountâ€¦</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.nuban}>{a.nuban} â€” {a.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          {error && <p className="text-[12px] text-destructive">{error}</p>}
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={confirm}>Resolve</Button>
+          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button onClick={confirm} disabled={loading}>{loading ? 'Resolving…' : 'Resolve'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
 
-// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 const REASON_FILTERS = ['All', 'unmatched', 'closed_account', 'amount_mismatch', 'tier_limit'] as const
 type ReasonFilter = (typeof REASON_FILTERS)[number]
 
 export function SuspenseQueue() {
-  const { tenant } = useAppStore()
-  const suspense = useDataStore((s) => s.suspense)
+  const [items, setItems] = useState<ApiSuspenseItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<ReasonFilter>('All')
-  const [resolving, setResolving] = useState<SuspenseItem | null>(null)
+  const [resolving, setResolving] = useState<ApiSuspenseItem | null>(null)
 
-  const visible = suspense
-    .filter((s) => s.tenant === tenant)
-    .filter((s) => filter === 'All' || s.reason === filter)
+  useEffect(() => {
+    suspenseApi.list()
+      .then((res) => setItems(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
-  const columns: ColumnDef<SuspenseItem, unknown>[] = [
+  function handleResolved(id: string) {
+    setItems((prev) => prev.filter((x) => x.id !== id))
+  }
+
+  const visible = items.filter((s) => filter === 'All' || s.reason === filter)
+
+  const columns: ColumnDef<ApiSuspenseItem, unknown>[] = [
     {
-      accessorKey: 'amount',
+      id: 'amount',
       header: 'Amount',
-      cell: ({ getValue }) => (
-        <span className="font-mono font-semibold text-[12.5px] text-text-primary">{getValue() as string}</span>
+      cell: ({ row }) => (
+        <span className="font-mono font-semibold text-[12.5px] text-text-primary">
+          {row.original.amount_kobo ? formatKobo(row.original.amount_kobo) : '—'}
+        </span>
       ),
     },
     {
-      accessorKey: 'target',
+      id: 'nuban',
       header: 'Target NUBAN',
-      cell: ({ getValue }) => (
-        <span className="font-mono text-[12px] text-text-secondary">{getValue() as string}</span>
+      cell: ({ row }) => (
+        <span className="font-mono text-[12px] text-text-secondary">
+          {row.original.nuban || row.original.transaction_id.slice(0, 8)}
+        </span>
       ),
     },
     {
       accessorKey: 'reason',
       header: 'Reason',
       cell: ({ getValue }) => {
-        const r = getValue() as SuspenseItem['reason']
-        return <Badge variant={r}>{r.replace(/_/g, ' ')}</Badge>
+        const r = getValue() as string
+        return <Badge variant={r as 'unmatched' | 'closed_account' | 'amount_mismatch' | 'tier_limit'}>{r.replace(/_/g, ' ')}</Badge>
       },
     },
     {
-      accessorKey: 'age',
+      id: 'age',
       header: 'Age',
-      cell: ({ getValue }) => (
-        <span className="text-[12px] text-amber-text font-mono">{getValue() as string}</span>
+      cell: ({ row }) => (
+        <span className="text-[12px] text-amber-text font-mono">{timeAgo(row.original.created_at)}</span>
       ),
     },
     {
@@ -166,13 +208,14 @@ export function SuspenseQueue() {
       </div>
       <div className="px-6 pb-6 sm:px-8 sm:pb-8">
         <Card className="overflow-hidden">
-          <DataTable columns={columns} data={visible} emptyMessage="No items in the suspense queue." />
+          <DataTable
+            columns={columns}
+            data={visible}
+            emptyMessage={loading ? 'Loading…' : 'No items in the suspense queue.'}
+          />
         </Card>
       </div>
-      <ResolveModal item={resolving} onClose={() => setResolving(null)} />
+      <ResolveModal item={resolving} onClose={() => setResolving(null)} onResolved={handleResolved} />
     </SectionLayout>
   )
 }
-
-
-

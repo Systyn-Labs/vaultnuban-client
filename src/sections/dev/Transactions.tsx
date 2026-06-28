@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
@@ -11,27 +11,27 @@ import {
   DialogDescription, DialogBody,
 } from '@/components/ui/dialog'
 import { useAppStore } from '@/store/app.store'
-import { useDataStore, type Transaction } from '@/store/data.store'
+import { txnApi, type ApiTransaction } from '@/lib/api'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Copy } from 'lucide-react'
 
-// â”€â”€â”€ Webhook payload modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Webhook payload modal ────────────────────────────────────────────────────
 
-function WebhookModal({ tx, onClose }: { tx: Transaction | null; onClose: () => void }) {
+function WebhookModal({ tx, onClose }: { tx: ApiTransaction | null; onClose: () => void }) {
   const showToast = useAppStore((s) => s.showToast)
   if (!tx) return null
 
   const payload = {
-    event: `transaction.${tx.dir}`,
-    session_id: tx.session,
+    event: `transaction.${tx.direction}`,
+    session_id: tx.session_id ?? null,
     account_nuban: tx.nuban,
-    amount: tx.amount,
+    amount: tx.amount_ngn,
     currency: 'NGN',
-    direction: tx.dir,
+    direction: tx.direction,
     source: tx.source,
-    narration: tx.narration,
-    timestamp: new Date(tx.time).toISOString(),
-    status: 'completed',
+    narration: tx.narration ?? null,
+    timestamp: tx.occurred_at,
+    status: tx.status,
   }
   const json = JSON.stringify(payload, null, 2)
 
@@ -41,8 +41,8 @@ function WebhookModal({ tx, onClose }: { tx: Transaction | null; onClose: () => 
         <DialogHeader>
           <DialogTitle>Webhook payload</DialogTitle>
           <DialogDescription>
-            <span className="font-mono">{tx.session}</span>
-            {' Â· '}
+            <span className="font-mono">{tx.session_id ?? tx.id.slice(0, 8)}</span>
+            {' · '}
             <span className="text-text-muted">{tx.nuban}</span>
           </DialogDescription>
         </DialogHeader>
@@ -65,38 +65,47 @@ function WebhookModal({ tx, onClose }: { tx: Transaction | null; onClose: () => 
   )
 }
 
-// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 const FILTERS = ['All', 'Credit', 'Debit'] as const
 type Filter = (typeof FILTERS)[number]
 
 export function Transactions() {
-  const { tenant } = useAppStore()
-  const transactions = useDataStore((s) => s.transactions)
+  const [transactions, setTransactions] = useState<ApiTransaction[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('All')
-  const [webhookTx, setWebhookTx] = useState<Transaction | null>(null)
+  const [webhookTx, setWebhookTx] = useState<ApiTransaction | null>(null)
 
-  const visible = transactions
-    .filter((t) => t.tenant === tenant)
-    .filter((t) => filter === 'All' || t.dir === filter.toLowerCase())
+  useEffect(() => {
+    txnApi.list()
+      .then((r) => setTransactions(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
-  const columns: ColumnDef<Transaction, unknown>[] = [
+  const visible = transactions.filter(
+    (t) => filter === 'All' || t.direction === filter.toLowerCase()
+  )
+
+  const columns: ColumnDef<ApiTransaction, unknown>[] = [
     {
-      accessorKey: 'session',
+      id: 'session',
       header: 'Session ID',
-      cell: ({ getValue }) => (
-        <span className="font-mono text-[11.5px] text-text-muted">{getValue() as string}</span>
+      cell: ({ row }) => (
+        <span className="font-mono text-[11.5px] text-text-muted">
+          {row.original.session_id ?? row.original.id.slice(0, 16)}
+        </span>
       ),
     },
     {
       accessorKey: 'nuban',
       header: 'NUBAN',
       cell: ({ getValue }) => (
-        <span className="font-mono text-[12px] text-text-secondary">{getValue() as string}</span>
+        <span className="font-mono text-[12px] text-text-secondary">{getValue() as string || '—'}</span>
       ),
     },
     {
-      accessorKey: 'dir',
+      accessorKey: 'direction',
       header: 'Direction',
       cell: ({ getValue }) => {
         const d = getValue() as string
@@ -112,24 +121,26 @@ export function Transactions() {
       },
     },
     {
-      accessorKey: 'amount',
+      accessorKey: 'amount_ngn',
       header: 'Amount',
       cell: ({ getValue }) => (
-        <span className="font-mono font-semibold text-[12.5px] text-text-primary">{getValue() as string}</span>
+        <span className="font-mono font-semibold text-[12.5px] text-text-primary">₦{getValue() as string}</span>
       ),
     },
     {
       accessorKey: 'narration',
       header: 'Narration',
       cell: ({ getValue }) => (
-        <span className="text-[12.5px] text-text-secondary">{getValue() as string}</span>
+        <span className="text-[12.5px] text-text-secondary">{(getValue() as string | undefined) ?? '—'}</span>
       ),
     },
     {
-      accessorKey: 'time',
+      accessorKey: 'occurred_at',
       header: 'Time',
       cell: ({ getValue }) => (
-        <span className="text-[12px] text-text-muted">{getValue() as string}</span>
+        <span className="text-[12px] text-text-muted">
+          {new Date(getValue() as string).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}
+        </span>
       ),
     },
     {
@@ -158,13 +169,14 @@ export function Transactions() {
       </div>
       <div className="px-6 pb-6 sm:px-8 sm:pb-8">
         <Card className="overflow-hidden">
-          <DataTable columns={columns} data={visible} emptyMessage="No transactions match this filter." />
+          <DataTable
+            columns={columns}
+            data={visible}
+            emptyMessage={loading ? 'Loading…' : 'No transactions match this filter.'}
+          />
         </Card>
       </div>
       <WebhookModal tx={webhookTx} onClose={() => setWebhookTx(null)} />
     </SectionLayout>
   )
 }
-
-
-

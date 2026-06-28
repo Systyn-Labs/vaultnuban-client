@@ -1,35 +1,51 @@
-﻿import { PageHeader } from '@/components/layout/PageHeader'
+import { useEffect, useState } from 'react'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { DataTable } from '@/components/ui/data-table'
 import { useAppStore } from '@/store/app.store'
-import { useDataStore, type Transaction } from '@/store/data.store'
+import { txnApi, type ApiTransaction } from '@/lib/api'
 import { type ColumnDef } from '@tanstack/react-table'
 
-// â”€â”€â”€ Build statement rows from transactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Build statement rows from transactions ────────────────────────────────────
 
-interface StatementRow extends Transaction {
-  running: number
+interface StatementRow extends ApiTransaction {
+  running_kobo: number
 }
 
-function buildStatement(txs: Transaction[]): StatementRow[] {
-  const sorted = [...txs].sort((a, b) => a.time.localeCompare(b.time))
+function buildStatement(txs: ApiTransaction[]): StatementRow[] {
+  const sorted = [...txs].sort(
+    (a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime()
+  )
   let running = 0
   return sorted.map((tx) => {
-    const raw = parseFloat(tx.amount.replace(/[â‚¦,]/g, '')) || 0
-    running = tx.dir === 'credit' ? running + raw : running - raw
-    return { ...tx, running }
+    running =
+      tx.direction === 'credit' ? running + tx.amount_kobo : running - tx.amount_kobo
+    return { ...tx, running_kobo: running }
   })
 }
 
-// â”€â”€â”€ CSV export helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function fmtKobo(kobo: number): string {
+  return (kobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 })
+}
+
+// ─── CSV export ────────────────────────────────────────────────────────────────
 
 function exportCsv(rows: StatementRow[]) {
-  const header = 'Session ID,NUBAN,Direction,Source,Amount,Narration,Time,Running Balance'
+  const header = 'Session ID,NUBAN,Direction,Source,Amount (NGN),Narration,Time,Running Balance'
   const body = rows.map((r) =>
-    [r.session, r.nuban, r.dir, r.source, r.amount, `"${r.narration}"`, r.time, `â‚¦${r.running.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`].join(',')
+    [
+      r.session_id ?? r.id.slice(0, 16),
+      r.nuban,
+      r.direction,
+      r.source,
+      r.amount_ngn,
+      `"${r.narration ?? ''}"`,
+      r.occurred_at,
+      `₦${fmtKobo(r.running_kobo)}`,
+    ].join(',')
   )
   const csv = [header, ...body].join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
@@ -41,15 +57,20 @@ function exportCsv(rows: StatementRow[]) {
   URL.revokeObjectURL(url)
 }
 
-// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function Statements() {
-  const { tenant } = useAppStore()
   const showToast = useAppStore((s) => s.showToast)
-  const transactions = useDataStore((s) => s.transactions)
+  const [rows, setRows] = useState<StatementRow[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const tenantTxs = transactions.filter((t) => t.tenant === tenant)
-  const rows = buildStatement(tenantTxs)
+  useEffect(() => {
+    txnApi
+      .list()
+      .then((r) => setRows(buildStatement(r.data)))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   function handleExport() {
     exportCsv(rows)
@@ -58,28 +79,33 @@ export function Statements() {
 
   const columns: ColumnDef<StatementRow, unknown>[] = [
     {
-      accessorKey: 'time',
+      accessorKey: 'occurred_at',
       header: 'Date / Time',
       cell: ({ getValue }) => (
-        <span className="text-[12px] text-text-muted">{getValue() as string}</span>
+        <span className="text-[12px] text-text-muted">
+          {new Date(getValue() as string).toLocaleString('en-GB', {
+            dateStyle: 'short',
+            timeStyle: 'short',
+          })}
+        </span>
       ),
     },
     {
       accessorKey: 'nuban',
       header: 'NUBAN',
       cell: ({ getValue }) => (
-        <span className="font-mono text-[12px] text-text-secondary">{getValue() as string}</span>
+        <span className="font-mono text-[12px] text-text-secondary">{(getValue() as string) || '—'}</span>
       ),
     },
     {
       accessorKey: 'narration',
       header: 'Narration',
       cell: ({ getValue }) => (
-        <span className="text-[12.5px] text-text-primary">{getValue() as string}</span>
+        <span className="text-[12.5px] text-text-primary">{(getValue() as string | undefined) ?? '—'}</span>
       ),
     },
     {
-      accessorKey: 'dir',
+      accessorKey: 'direction',
       header: 'Direction',
       cell: ({ getValue }) => {
         const d = getValue() as string
@@ -87,20 +113,24 @@ export function Statements() {
       },
     },
     {
-      accessorKey: 'amount',
+      accessorKey: 'amount_ngn',
       header: 'Amount',
       cell: ({ getValue }) => (
-        <span className="font-mono font-semibold text-[12.5px] text-text-primary">{getValue() as string}</span>
+        <span className="font-mono font-semibold text-[12.5px] text-text-primary">
+          ₦{getValue() as string}
+        </span>
       ),
     },
     {
-      accessorKey: 'running',
+      accessorKey: 'running_kobo',
       header: 'Running balance',
       cell: ({ getValue }) => {
         const n = getValue() as number
         return (
-          <span className={`font-mono text-[12.5px] font-semibold ${n < 0 ? 'text-red-text' : 'text-text-primary'}`}>
-            â‚¦{n.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+          <span
+            className={`font-mono text-[12.5px] font-semibold ${n < 0 ? 'text-red-text' : 'text-text-primary'}`}
+          >
+            ₦{fmtKobo(n)}
           </span>
         )
       },
@@ -111,20 +141,22 @@ export function Statements() {
     <SectionLayout noPadding>
       <PageHeader
         title="Statements"
-        subtitle="Chronological ledger with running balance â€” export to CSV for reconciliation"
+        subtitle="Chronological ledger with running balance — export to CSV for reconciliation"
         actions={
-          <Button variant="outline" size="sm" onClick={handleExport}>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={rows.length === 0}>
             Export CSV
           </Button>
         }
       />
       <div className="p-6 sm:p-8">
         <Card className="overflow-hidden">
-          <DataTable columns={columns} data={rows} emptyMessage="No transactions recorded yet." />
+          <DataTable
+            columns={columns}
+            data={rows}
+            emptyMessage={loading ? 'Loading…' : 'No transactions recorded yet.'}
+          />
         </Card>
       </div>
     </SectionLayout>
   )
 }
-
-

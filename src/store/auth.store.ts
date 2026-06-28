@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { authApi, setApiToken } from '@/lib/api'
+import { authApi, setApiToken, setAdminToken } from '@/lib/api'
 import type { Role } from './app.store'
 
 export interface AuthUser {
@@ -68,10 +68,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res = await authApi.login(email, password)
 
-      // Store the API key as the bearer token for subsequent calls
-      if (res.api_key) {
-        setApiToken(res.api_key)
-      }
+      if (res.api_key) setApiToken(res.api_key)
+      setAdminToken(res.admin_token ?? null)
 
       const user: AuthUser = {
         id: res.id,
@@ -97,6 +95,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     saveSession(null)
     setApiToken(null)
+    setAdminToken(null)
     set({ user: null, error: null })
   },
 

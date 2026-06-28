@@ -1,86 +1,94 @@
+import { useEffect, useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { DataTable } from '@/components/ui/data-table'
-import { useDataStore, type SuspenseItem } from '@/store/data.store'
+import { adminApi, type ApiCrossTenantSuspenseItem } from '@/lib/api'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Info } from 'lucide-react'
 
-const REASON_LABELS: Record<SuspenseItem['reason'], string> = {
+const REASON_LABELS: Record<string, string> = {
   unmatched: 'Unmatched',
   closed_account: 'Closed account',
   amount_mismatch: 'Amount mismatch',
   tier_limit: 'Tier limit',
+  suspended_account: 'Suspended account',
 }
 
-interface XSusRow {
-  tenant: string
-  amount: string
-  reason: SuspenseItem['reason']
-  target: string
-  age: string
+function formatKobo(kobo: number): string {
+  return (kobo / 100).toLocaleString('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 2,
+  })
 }
 
-const columns: ColumnDef<XSusRow, unknown>[] = [
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  const rem = m % 60
+  return rem > 0 ? `${h}h ${rem}m` : `${h}h`
+}
+
+const columns: ColumnDef<ApiCrossTenantSuspenseItem, unknown>[] = [
   {
-    accessorKey: 'tenant',
+    accessorKey: 'tenant_name',
     header: 'Tenant',
     cell: ({ getValue }) => (
-      <span className="font-semibold text-text-primary">{getValue() as string}</span>
+      <span className="font-semibold text-text-primary">{(getValue() as string) || '—'}</span>
     ),
   },
   {
-    accessorKey: 'amount',
+    accessorKey: 'amount_kobo',
     header: 'Amount',
     cell: ({ getValue }) => (
-      <span className="font-mono font-semibold text-text-primary">{getValue() as string}</span>
+      <span className="font-mono font-semibold text-text-primary">
+        {formatKobo(getValue() as number)}
+      </span>
     ),
   },
   {
     accessorKey: 'reason',
     header: 'Reason',
     cell: ({ getValue }) => {
-      const r = getValue() as SuspenseItem['reason']
+      const r = getValue() as string
       return (
-        <Badge variant={r}>
-          {REASON_LABELS[r]}
+        <Badge variant={r as 'unmatched' | 'closed_account' | 'amount_mismatch' | 'tier_limit'}>
+          {REASON_LABELS[r] ?? r}
         </Badge>
       )
     },
   },
   {
-    accessorKey: 'target',
+    accessorKey: 'nuban',
     header: 'Target NUBAN',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[12px] text-text-secondary">{getValue() as string}</span>
+      <span className="font-mono text-[12px] text-text-secondary">{(getValue() as string) || '—'}</span>
     ),
   },
   {
-    accessorKey: 'age',
+    accessorKey: 'created_at',
     header: 'Age',
     cell: ({ getValue }) => (
-      <span className="text-text-muted">{getValue() as string}</span>
+      <span className="text-text-muted">{timeAgo(getValue() as string)}</span>
     ),
   },
 ]
 
 export function CrossTenantSuspense() {
-  const suspense = useDataStore((s) => s.suspense)
-  const tenants = useDataStore((s) => s.tenants)
+  const [items, setItems] = useState<ApiCrossTenantSuspenseItem[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const tenantNameByKey: Record<string, string> = {}
-  tenants.forEach((t) => {
-    tenantNameByKey[t.key] = t.name
-  })
-
-  const rows: XSusRow[] = suspense.map((x) => ({
-    tenant: tenantNameByKey[x.tenant] ?? x.tenant,
-    amount: x.amount,
-    reason: x.reason,
-    target: x.target,
-    age: x.age,
-  }))
+  useEffect(() => {
+    adminApi
+      .listCrossTenantSuspense()
+      .then((r) => setItems(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <SectionLayout noPadding>
@@ -90,7 +98,6 @@ export function CrossTenantSuspense() {
       />
 
       <div className="space-y-6 p-6 sm:p-8">
-        {/* Read-only notice */}
         <div
           className="flex items-start gap-3 rounded-xl border px-4 py-3 text-[12.5px] font-medium"
           style={{ background: '#1C2638', borderColor: '#1E2D42', color: '#9BA6B8' }}
@@ -99,12 +106,11 @@ export function CrossTenantSuspense() {
           Admin has read-only visibility here. No resolve action is exposed at platform scope.
         </div>
 
-        {/* Table */}
         <Card className="overflow-hidden">
           <DataTable
             columns={columns}
-            data={rows}
-            emptyMessage="No cross-tenant suspense items."
+            data={items}
+            emptyMessage={loading ? 'Loading…' : 'No cross-tenant suspense items.'}
           />
         </Card>
       </div>
