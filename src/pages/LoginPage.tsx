@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuthStore, TEST_ACCOUNTS } from '@/store/auth.store'
@@ -74,8 +74,8 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { login, error, clearError } = useAuthStore()
+  // loading state is owned by auth store now
+  const { login, error, loading, clearError } = useAuthStore()
   const { setRole, setTenant } = useAppStore()
   const emailRef = useRef<HTMLInputElement>(null)
 
@@ -91,17 +91,11 @@ export function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email || !password) return
-    setLoading(true)
+    if (!email || !password || loading) return
 
-    // Simulate a brief network delay for realism; replace with real fetch when integrating
-    await new Promise((r) => setTimeout(r, 600))
-
-    const ok = login(email, password)
-    setLoading(false)
+    const ok = await login(email, password)
 
     if (ok) {
-      // Sync the app store role + tenant from the authenticated user
       const user = useAuthStore.getState().user!
       setRole(user.role as Role)
       if (user.tenant) setTenant(user.tenant)
@@ -179,6 +173,7 @@ export function LoginPage() {
             type="submit"
             className="w-full"
             disabled={loading || !email || !password}
+          aria-busy={loading}
           >
             {loading ? (
               <span className="flex items-center gap-2">

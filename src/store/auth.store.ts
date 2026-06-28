@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { authApi, setApiToken } from '@/lib/api'
 import type { Role } from './app.store'
 
 export interface AuthUser {
@@ -7,60 +8,10 @@ export interface AuthUser {
   email: string
   initials: string
   role: Role
-  tenant: string
+  tenant: string      // tenant ID (empty for admin)
+  tenantName: string  // human-readable tenant name
   roleLabel: string
 }
-
-// ─── Seeded credentials ───────────────────────────────────────────────────────
-// In production: replace login() body with a POST /auth/token API call.
-
-interface SeedAccount {
-  email: string
-  password: string
-  user: AuthUser
-}
-
-const SEED_ACCOUNTS: SeedAccount[] = [
-  {
-    email: 'ada@acme.io',
-    password: 'Dev1234!',
-    user: {
-      id: 'u_ada',
-      name: 'Adaeze Okonkwo',
-      email: 'ada@acme.io',
-      initials: 'AO',
-      role: 'dev',
-      tenant: 'acme',
-      roleLabel: 'Tenant Developer',
-    },
-  },
-  {
-    email: 'bisi@acme.io',
-    password: 'Ops1234!',
-    user: {
-      id: 'u_bisi',
-      name: 'Bisi Thomas',
-      email: 'bisi@acme.io',
-      initials: 'BT',
-      role: 'ops',
-      tenant: 'acme',
-      roleLabel: 'Tenant Ops',
-    },
-  },
-  {
-    email: 'operator@systyn.io',
-    password: 'Admin1234!',
-    user: {
-      id: 'u_op',
-      name: 'Systyn Operator',
-      email: 'operator@systyn.io',
-      initials: 'SO',
-      role: 'admin',
-      tenant: '',
-      roleLabel: 'Platform Admin',
-    },
-  },
-]
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
@@ -76,11 +27,24 @@ function loadSession(): AuthUser | null {
 }
 
 function saveSession(user: AuthUser | null) {
-  if (user) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
-  } else {
-    sessionStorage.removeItem(SESSION_KEY)
-  }
+  if (user) sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
+  else sessionStorage.removeItem(SESSION_KEY)
+}
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  dev: 'Tenant Developer',
+  ops: 'Tenant Ops',
+  admin: 'Platform Admin',
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -88,8 +52,8 @@ function saveSession(user: AuthUser | null) {
 interface AuthState {
   user: AuthUser | null
   error: string | null
-  /** Returns true on success, false on bad credentials */
-  login: (email: string, password: string) => boolean
+  loading: boolean
+  login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   clearError: () => void
 }
@@ -97,33 +61,52 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: loadSession(),
   error: null,
+  loading: false,
 
-  login: (email, password) => {
-    const match = SEED_ACCOUNTS.find(
-      (a) => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password
-    )
-    if (!match) {
-      set({ error: 'Invalid email or password.' })
+  login: async (email, password) => {
+    set({ loading: true, error: null })
+    try {
+      const res = await authApi.login(email, password)
+
+      // Store the API key as the bearer token for subsequent calls
+      if (res.api_key) {
+        setApiToken(res.api_key)
+      }
+
+      const user: AuthUser = {
+        id: res.id,
+        name: res.name,
+        email: res.email,
+        initials: initials(res.name),
+        role: res.role as Role,
+        tenant: res.tenant_id ?? '',
+        tenantName: res.tenant_name ?? '',
+        roleLabel: ROLE_LABELS[res.role] ?? res.role,
+      }
+
+      saveSession(user)
+      set({ user, error: null, loading: false })
+      return true
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Login failed'
+      set({ error: msg, loading: false })
       return false
     }
-    saveSession(match.user)
-    set({ user: match.user, error: null })
-    return true
   },
 
   logout: () => {
     saveSession(null)
+    setApiToken(null)
     set({ user: null, error: null })
   },
 
   clearError: () => set({ error: null }),
 }))
 
-// Export seed accounts for the login page credential chips
-export const TEST_ACCOUNTS = SEED_ACCOUNTS.map(({ email, password, user }) => ({
-  email,
-  password,
-  label: user.name,
-  role: user.roleLabel,
-  tenant: user.tenant || 'All tenants',
-}))
+// ─── Test credential chips (for the login page) ───────────────────────────────
+
+export const TEST_ACCOUNTS = [
+  { email: 'ada@acme.io',        password: 'Dev1234!', label: 'Adaeze Okonkwo', role: 'Tenant Developer', tenant: 'Acme Fintech' },
+  { email: 'bisi@acme.io',       password: 'Ops1234!', label: 'Bisi Thomas',    role: 'Tenant Ops',       tenant: 'Acme Fintech' },
+  { email: 'operator@systyn.io', password: 'Admin1234!', label: 'Systyn Operator', role: 'Platform Admin', tenant: 'All tenants' },
+]
