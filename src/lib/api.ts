@@ -305,7 +305,7 @@ export const adminApi = {
       getAdminToken() ?? undefined,
     ),
   listNombaVAs: (cursor?: string) =>
-    request<{ data: ApiNombaVA[]; next_cursor?: string }>(
+    request<{ data: ApiNombaVA[]; next_cursor?: string; unavailable?: boolean; reason?: string }>(
       'GET',
       `/internal/nomba-virtual-accounts${cursor ? `?cursor=${cursor}` : ''}`,
       undefined,

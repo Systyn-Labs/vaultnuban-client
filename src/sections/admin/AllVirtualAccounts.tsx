@@ -93,6 +93,7 @@ export function AllVirtualAccounts() {
   const [nomba, setNomba] = useState<ApiNombaVA[]>([])
   const [trackedError, setTrackedError] = useState<string | null>(null)
   const [nombaError, setNombaError] = useState<string | null>(null)
+  const [nombaUnavailable, setNombaUnavailable] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -103,8 +104,13 @@ export function AllVirtualAccounts() {
       if (trackedResult.status === 'fulfilled') setTracked(trackedResult.value.data)
       else setTrackedError((trackedResult.reason as Error).message)
 
-      if (nombaResult.status === 'fulfilled') setNomba(nombaResult.value.data)
-      else setNombaError((nombaResult.reason as Error).message)
+      if (nombaResult.status === 'fulfilled') {
+        const res = nombaResult.value
+        if (res.unavailable) setNombaUnavailable(res.reason ?? 'Not available')
+        else setNomba(res.data)
+      } else {
+        setNombaError((nombaResult.reason as Error).message)
+      }
     }).finally(() => setLoading(false))
   }, [])
 
@@ -146,6 +152,8 @@ export function AllVirtualAccounts() {
         <CardBody className="p-0">
           {loading ? (
             <div className="p-6 text-sm text-muted-foreground">Loading…</div>
+          ) : nombaUnavailable ? (
+            <div className="p-6 text-sm text-muted-foreground">{nombaUnavailable}</div>
           ) : nombaError ? (
             <div className="p-6 text-sm text-destructive">{nombaError}</div>
           ) : (
