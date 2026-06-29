@@ -252,6 +252,15 @@ export interface ApiSweepRun {
   ran_at: string
 }
 
+export interface ApiNombaVA {
+  account_ref: string
+  nuban: string
+  bank_name: string
+  account_name: string
+  status: string
+  created_at: string
+}
+
 export interface ApiAllVA {
   id: string
   customer_id: string
@@ -292,6 +301,13 @@ export const adminApi = {
     request<{ data: ApiAllVA[]; next_cursor?: string }>(
       'GET',
       `/internal/virtual-accounts${cursor ? `?cursor=${cursor}` : ''}`,
+      undefined,
+      getAdminToken() ?? undefined,
+    ),
+  listNombaVAs: (cursor?: string) =>
+    request<{ data: ApiNombaVA[]; next_cursor?: string }>(
+      'GET',
+      `/internal/nomba-virtual-accounts${cursor ? `?cursor=${cursor}` : ''}`,
       undefined,
       getAdminToken() ?? undefined,
     ),
