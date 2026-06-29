@@ -36,6 +36,9 @@ async function request<T>(method: string, path: string, body?: unknown, override
     const err = await res.json().catch(() => ({})) as Record<string, unknown>
     throw new Error((err['detail'] as string | undefined) ?? `HTTP ${res.status}`)
   }
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T
+  }
   return res.json() as Promise<T>
 }
 
