@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { DataTable } from '@/components/ui/data-table'
 import { useAppStore } from '@/store/app.store'
-import { adminApi, type ApiPlatformHealth } from '@/lib/api'
+import { adminApi, type ApiPlatformHealth, type ApiSweepRun } from '@/lib/api'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Check } from 'lucide-react'
 
@@ -91,18 +91,86 @@ const columns: ColumnDef<TenantRow, unknown>[] = [
   },
 ]
 
+// ─── Sweep run columns ────────────────────────────────────────────────────────
+
+const sweepColumns: ColumnDef<ApiSweepRun, unknown>[] = [
+  {
+    accessorKey: 'ran_at',
+    header: 'Ran at',
+    cell: ({ getValue }) => (
+      <span className="font-mono text-[12px] text-text-primary">
+        {new Date(getValue() as string).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'medium' })}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'found',
+    header: 'Found',
+    cell: ({ getValue }) => <span className="font-mono">{getValue() as number}</span>,
+  },
+  {
+    accessorKey: 'posted',
+    header: 'Posted',
+    cell: ({ getValue }) => (
+      <span className="font-mono text-green-text">{getValue() as number}</span>
+    ),
+  },
+  {
+    accessorKey: 'suspensed',
+    header: 'Suspensed',
+    cell: ({ getValue }) => (
+      <span className="font-mono text-amber-text">{getValue() as number}</span>
+    ),
+  },
+  {
+    accessorKey: 'duration_ms',
+    header: 'Duration',
+    cell: ({ getValue }) => {
+      const ms = getValue() as number | null
+      return <span className="font-mono text-text-muted">{ms != null ? `${ms}ms` : '—'}</span>
+    },
+  },
+  {
+    accessorKey: 'window_from',
+    header: 'Window',
+    cell: ({ row }) => (
+      <span className="font-mono text-[11px] text-text-muted">
+        {new Date(row.original.window_from).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}
+        {' → '}
+        {new Date(row.original.window_to).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'error',
+    header: 'Status',
+    cell: ({ getValue }) => {
+      const err = getValue() as string | undefined
+      return err
+        ? <Badge variant="destructive" className="text-[11px]">Error</Badge>
+        : <Badge variant="active" className="text-[11px]">OK</Badge>
+    },
+  },
+]
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function GlobalHealth() {
   const showToast = useAppStore((s) => s.showToast)
   const [health, setHealth] = useState<ApiPlatformHealth | null>(null)
+  const [sweepRuns, setSweepRuns] = useState<ApiSweepRun[]>([])
   const [loading, setLoading] = useState(true)
 
   function load() {
     setLoading(true)
-    adminApi
-      .getHealth()
-      .then(setHealth)
+    Promise.all([
+      adminApi.getHealth(),
+      adminApi.listSweepRuns(20),
+    ])
+      .then(([h, s]) => {
+        setHealth(h)
+        setSweepRuns(s.data)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }
@@ -274,6 +342,24 @@ export function GlobalHealth() {
             columns={columns}
             data={health?.tenant_health ?? []}
             emptyMessage={loading ? 'Loading…' : 'No tenants found.'}
+          />
+        </Card>
+
+        {/* Sweep run log */}
+        <Card className="overflow-hidden">
+          <div
+            className="border-b px-6 py-5 flex items-center justify-between"
+            style={{ borderColor: '#1E2D42' }}
+          >
+            <div>
+              <p className="text-[14px] font-semibold text-text-primary">Sweep run log</p>
+              <p className="mt-0.5 text-[12px] text-text-muted">Last 20 reconciliation sweeps, newest first</p>
+            </div>
+          </div>
+          <DataTable
+            columns={sweepColumns}
+            data={sweepRuns}
+            emptyMessage={loading ? 'Loading…' : 'No sweep runs recorded yet.'}
           />
         </Card>
       </div>

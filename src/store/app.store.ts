@@ -13,6 +13,7 @@ export type Section =
   | 'transactions'
   | 'statements'
   | 'keys'
+  | 'webhooks'
   // ops
   | 'suspense'
   | 'opscustomers'

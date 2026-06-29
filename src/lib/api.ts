@@ -169,6 +169,41 @@ export const txnApi = {
     request<ListTransactionsResponse>('GET', `/v1/transactions${cursor ? `?cursor=${cursor}` : ''}`),
 }
 
+// ── Webhook relay ─────────────────────────────────────────────────────────────
+
+export interface ApiWebhookEndpoint {
+  id: string
+  url: string
+  active: boolean
+  created_at: string
+}
+
+export interface ApiDelivery {
+  id: string
+  endpoint_id: string
+  event_type: string
+  attempt: number
+  status: string
+  status_code?: number
+  error?: string
+  next_retry_at?: string
+  delivered_at?: string
+  created_at: string
+}
+
+export const relayApi = {
+  listEndpoints: () =>
+    request<{ data: ApiWebhookEndpoint[] }>('GET', '/v1/webhook-endpoints'),
+  createEndpoint: (url: string, secret: string) =>
+    request<ApiWebhookEndpoint>('POST', '/v1/webhook-endpoints', { url, secret }),
+  listDeliveries: (cursor?: string) =>
+    request<{ data: ApiDelivery[]; next_cursor?: string }>(
+      'GET', `/v1/webhook-deliveries${cursor ? `?cursor=${cursor}` : ''}`
+    ),
+  replay: (deliveryId: string) =>
+    request<void>('POST', `/v1/webhook-deliveries/${deliveryId}/replays`),
+}
+
 // ── Admin (uses admin_token, not the tenant API key) ──────────────────────────
 
 export interface OnboardResponse {
@@ -204,9 +239,24 @@ export interface ApiPlatformHealth {
   checked_at: string
 }
 
+export interface ApiSweepRun {
+  id: string
+  window_from: string
+  window_to: string
+  pages_fetched: number
+  found: number
+  posted: number
+  suspensed: number
+  duration_ms: number | null
+  error?: string
+  ran_at: string
+}
+
 export const adminApi = {
   getHealth: () =>
     request<ApiPlatformHealth>('GET', '/internal/health', undefined, getAdminToken() ?? undefined),
+  listSweepRuns: (limit = 50) =>
+    request<{ data: ApiSweepRun[] }>('GET', `/internal/sweep-runs?limit=${limit}`, undefined, getAdminToken() ?? undefined),
   listTenants: () =>
     request<{ data: ApiTenant[] }>('GET', '/internal/tenants', undefined, getAdminToken() ?? undefined),
   onboard: (

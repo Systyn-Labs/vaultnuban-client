@@ -7,16 +7,15 @@ import {
   ArrowLeftRight,
   FileText,
   Key,
+  Webhook,
   AlertTriangle,
   Clock,
   Layers,
-  ChevronDown,
   LogOut,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore, type Role, type Section } from '@/store/app.store'
-import { useDataStore } from '@/store/data.store'
 import { useAuthStore } from '@/store/auth.store'
 
 // ─── Nav definitions ─────────────────────────────────────────────────────────
@@ -33,6 +32,7 @@ export const NAV_DEFS: Record<Role, { key: Section; label: string; Icon: React.E
     { key: 'transactions', label: 'Transactions', Icon: ArrowLeftRight },
     { key: 'statements', label: 'Statements', Icon: FileText },
     { key: 'keys', label: 'API Keys', Icon: Key },
+    { key: 'webhooks', label: 'Webhooks', Icon: Webhook },
   ],
   ops: [
     { key: 'suspense', label: 'Suspense Queue', Icon: AlertTriangle },
@@ -62,44 +62,6 @@ function Logo() {
       <div>
         <p className="text-[13.5px] font-bold tracking-tight text-text-primary">VaultNUBAN</p>
         <p className="font-mono text-[10px] leading-tight text-text-muted">Σ debits = Σ credits ✓</p>
-      </div>
-    </div>
-  )
-}
-
-// ─── Tenant Selector ──────────────────────────────────────────────────────────
-
-function TenantSelector() {
-  const { tenant, setTenant, showToast } = useAppStore()
-  const tenants = useDataStore((s) => s.tenants)
-
-  return (
-    <div className="mx-3 mb-5">
-      <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
-        Tenant scope
-      </p>
-      <div className="relative">
-        <select
-          value={tenant}
-          onChange={(e) => {
-            const t = tenants.find((x) => x.key === e.target.value)
-            setTenant(e.target.value)
-            if (t) showToast(`Now viewing ${t.name} — scope isolated`)
-          }}
-          className={cn(
-            'w-full appearance-none rounded-md border px-3 py-2 pr-8 text-[13px] font-medium',
-            'bg-[#1C2638] border-[#1E2D42] text-text-primary',
-            'focus:outline-none focus:ring-2 focus:ring-accent/60',
-            'transition-colors'
-          )}
-        >
-          {tenants.map((t) => (
-            <option key={t.key} value={t.key} className="bg-surface">
-              {t.name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-4 w-4 text-text-muted" />
       </div>
     </div>
   )
@@ -181,9 +143,6 @@ function UserFooter() {
 // ─── Sidebar Content ──────────────────────────────────────────────────────────
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
-  const { role } = useAppStore()
-  const isTenantUser = role !== 'admin'
-
   return (
     <div className="flex h-full w-64 flex-col" style={{ background: '#0E1525' }}>
       {/* Logo row */}
@@ -198,9 +157,6 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           </button>
         )}
       </div>
-
-      {/* Tenant selector (dev + ops only) */}
-      {isTenantUser && <TenantSelector />}
 
       {/* Nav */}
       <NavItems onClose={onClose} />

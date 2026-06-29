@@ -14,6 +14,7 @@ import { Customers } from '@/sections/shared/Customers'
 import { Transactions } from '@/sections/dev/Transactions'
 import { Statements } from '@/sections/shared/Statements'
 import { ApiKeys } from '@/sections/dev/ApiKeys'
+import { Webhooks } from '@/sections/dev/Webhooks'
 // Section views — ops
 import { SuspenseQueue } from '@/sections/ops/SuspenseQueue'
 import { AuditLog } from '@/sections/ops/AuditLog'
@@ -32,6 +33,7 @@ function SectionContent() {
   if (role === 'dev' && section === 'transactions') return <Transactions />
   if (role === 'dev' && section === 'statements') return <Statements />
   if (role === 'dev' && section === 'keys') return <ApiKeys />
+  if (role === 'dev' && section === 'webhooks') return <Webhooks />
 
   // Ops
   if (role === 'ops' && section === 'suspense') return <SuspenseQueue />
