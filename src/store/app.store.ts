@@ -7,6 +7,7 @@ export type Section =
   | 'health'
   | 'tenants'
   | 'xsuspense'
+  | 'allaccounts'
   // dev
   | 'accounts'
   | 'customers'

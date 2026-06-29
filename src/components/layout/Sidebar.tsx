@@ -13,6 +13,7 @@ import {
   Layers,
   LogOut,
   X,
+  LayoutList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore, type Role, type Section } from '@/store/app.store'
@@ -25,6 +26,7 @@ export const NAV_DEFS: Record<Role, { key: Section; label: string; Icon: React.E
     { key: 'health', label: 'Global Health', Icon: Activity },
     { key: 'tenants', label: 'Tenants', Icon: Building2 },
     { key: 'xsuspense', label: 'Cross-tenant Suspense', Icon: Layers },
+    { key: 'allaccounts', label: 'All Virtual Accounts', Icon: LayoutList },
   ],
   dev: [
     { key: 'accounts', label: 'Virtual Accounts', Icon: CreditCard },

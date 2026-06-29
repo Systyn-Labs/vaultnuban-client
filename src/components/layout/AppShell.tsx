@@ -8,6 +8,7 @@ import { useAppStore } from '@/store/app.store'
 import { GlobalHealth } from '@/sections/admin/GlobalHealth'
 import { Tenants } from '@/sections/admin/Tenants'
 import { CrossTenantSuspense } from '@/sections/admin/CrossTenantSuspense'
+import { AllVirtualAccounts } from '@/sections/admin/AllVirtualAccounts'
 // Section views — dev
 import { VirtualAccounts } from '@/sections/dev/VirtualAccounts'
 import { Customers } from '@/sections/shared/Customers'
@@ -26,6 +27,7 @@ function SectionContent() {
   if (role === 'admin' && section === 'health') return <GlobalHealth />
   if (role === 'admin' && section === 'tenants') return <Tenants />
   if (role === 'admin' && section === 'xsuspense') return <CrossTenantSuspense />
+  if (role === 'admin' && section === 'allaccounts') return <AllVirtualAccounts />
 
   // Dev
   if (role === 'dev' && section === 'accounts') return <VirtualAccounts />

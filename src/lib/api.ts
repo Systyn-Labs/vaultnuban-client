@@ -252,6 +252,18 @@ export interface ApiSweepRun {
   ran_at: string
 }
 
+export interface ApiAllVA {
+  id: string
+  customer_id: string
+  customer_display_name: string
+  tenant_name: string
+  nuban: string
+  bank_name: string
+  account_name: string
+  status: string
+  created_at: string
+}
+
 export const adminApi = {
   getHealth: () =>
     request<ApiPlatformHealth>('GET', '/internal/health', undefined, getAdminToken() ?? undefined),
@@ -273,6 +285,13 @@ export const adminApi = {
     request<ListCrossTenantSuspenseResponse>(
       'GET',
       `/internal/suspense${cursor ? `?cursor=${cursor}` : ''}`,
+      undefined,
+      getAdminToken() ?? undefined,
+    ),
+  listAllVAs: (cursor?: string) =>
+    request<{ data: ApiAllVA[]; next_cursor?: string }>(
+      'GET',
+      `/internal/virtual-accounts${cursor ? `?cursor=${cursor}` : ''}`,
       undefined,
       getAdminToken() ?? undefined,
     ),
