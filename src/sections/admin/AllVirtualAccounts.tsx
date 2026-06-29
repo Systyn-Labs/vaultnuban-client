@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionLayout } from '@/components/layout/SectionLayout'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable } from '@/components/ui/data-table'
 import { adminApi, type ApiAllVA, type ApiNombaVA } from '@/lib/api'
 import { type ColumnDef } from '@tanstack/react-table'
@@ -123,7 +123,7 @@ export function AllVirtualAccounts() {
             NUBANs recorded in VaultNUBAN, grouped by tenant and customer.
           </p>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardBody className="p-0">
           {loading ? (
             <div className="p-6 text-sm text-muted-foreground">Loading…</div>
           ) : trackedError ? (
@@ -131,7 +131,7 @@ export function AllVirtualAccounts() {
           ) : (
             <DataTable columns={trackedColumns} data={tracked} />
           )}
-        </CardContent>
+        </CardBody>
       </Card>
 
       {/* ── Nomba-side ── */}
@@ -143,7 +143,7 @@ export function AllVirtualAccounts() {
             A NUBAN present here but not above indicates an untracked account.
           </p>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardBody className="p-0">
           {loading ? (
             <div className="p-6 text-sm text-muted-foreground">Loading…</div>
           ) : nombaError ? (
@@ -151,7 +151,7 @@ export function AllVirtualAccounts() {
           ) : (
             <DataTable columns={nombaColumns} data={nomba} />
           )}
-        </CardContent>
+        </CardBody>
       </Card>
     </SectionLayout>
   )
