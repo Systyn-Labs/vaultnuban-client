@@ -81,6 +81,14 @@ export interface ListCustomersResponse {
   next_cursor?: string
 }
 
+export interface ApiCustomerBalance {
+  customer_id: string
+  balance_kobo: number
+  balance_ngn: string
+  kyc_tier: number
+  computed_at: string
+}
+
 export const customerApi = {
   list: (cursor?: string) =>
     request<ListCustomersResponse>('GET', `/v1/customers${cursor ? `?cursor=${cursor}` : ''}`),
@@ -91,6 +99,8 @@ export const customerApi = {
   }) => request<ApiCustomer>('POST', '/v1/customers', body),
   updateKYC: (customerId: string, kycTier: number) =>
     request<ApiCustomer>('PATCH', `/v1/customers/${customerId}/identity`, { kyc_tier: kycTier }),
+  balance: (customerId: string) =>
+    request<ApiCustomerBalance>('GET', `/v1/customers/${customerId}/balance`),
 }
 
 // ── Suspense ──────────────────────────────────────────────────────────────────
@@ -380,4 +390,89 @@ export const suspenseApi = {
     request<ListSuspenseResponse>('GET', `/v1/suspense${cursor ? `?cursor=${cursor}` : ''}`),
   resolve: (itemId: string, body: { resolution: string; notes: string; target_customer_id?: string }) =>
     request<void>('PATCH', `/v1/suspense/${itemId}`, body),
+}
+
+// ── Withdrawals ───────────────────────────────────────────────────────────────
+
+export interface ApiWithdrawal {
+  id: string
+  customer_id: string
+  amount_kobo: number
+  destination_bank_code: string
+  destination_account_number: string
+  destination_account_name: string
+  narration: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  provider_transaction_id?: string
+  failure_reason?: string
+  created_at: string
+}
+
+export interface ApiAccountResolution {
+  account_name: string
+  account_number: string
+  bank_code: string
+}
+
+export const withdrawalApi = {
+  initiate: (
+    customerId: string,
+    body: {
+      amount_kobo: number
+      destination_bank_code: string
+      destination_account_number: string
+      destination_account_name: string
+      narration?: string
+    },
+  ) => request<ApiWithdrawal>('POST', `/v1/customers/${customerId}/withdrawals`, body),
+
+  list: (customerId: string, cursor?: string) =>
+    request<{ data: ApiWithdrawal[]; next_cursor?: string }>(
+      'GET',
+      `/v1/customers/${customerId}/withdrawals${cursor ? `?cursor=${cursor}` : ''}`,
+    ),
+
+  resolvePayee: (bankCode: string, accountNumber: string) =>
+    request<ApiAccountResolution>('GET', `/v1/payees/resolve?bank_code=${bankCode}&account_number=${accountNumber}`),
+}
+
+// ── Collections ───────────────────────────────────────────────────────────────
+
+export interface ApiCollection {
+  id: string
+  customer_id: string
+  reference: string
+  description: string
+  status: 'open' | 'fulfilled' | 'expired' | 'cancelled'
+  nuban: string
+  bank_name: string
+  expected_amount_kobo?: number
+  expires_at?: string
+  fulfilled_by_txn_id?: string
+  fulfilled_at?: string
+  created_at: string
+}
+
+export const collectionApi = {
+  create: (
+    customerId: string,
+    body: {
+      reference: string
+      description?: string
+      expected_amount_kobo?: number
+      expires_in_seconds?: number
+    },
+  ) => request<ApiCollection>('POST', `/v1/customers/${customerId}/collections`, body),
+
+  list: (customerId: string, cursor?: string) =>
+    request<{ data: ApiCollection[]; next_cursor?: string }>(
+      'GET',
+      `/v1/customers/${customerId}/collections${cursor ? `?cursor=${cursor}` : ''}`,
+    ),
+
+  get: (customerId: string, collectionId: string) =>
+    request<ApiCollection>('GET', `/v1/customers/${customerId}/collections/${collectionId}`),
+
+  cancel: (customerId: string, collectionId: string) =>
+    request<void>('DELETE', `/v1/customers/${customerId}/collections/${collectionId}`),
 }

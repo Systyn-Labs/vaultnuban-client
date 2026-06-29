@@ -15,10 +15,13 @@ export type Section =
   | 'statements'
   | 'keys'
   | 'webhooks'
+  | 'withdrawals'
+  | 'collections'
   // ops
   | 'suspense'
   | 'opscustomers'
   | 'opsstatements'
+  | 'opsLedger'
   | 'audit'
 
 const defaultSection: Record<Role, Section> = {

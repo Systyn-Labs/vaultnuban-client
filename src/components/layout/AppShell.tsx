@@ -16,8 +16,11 @@ import { Transactions } from '@/sections/dev/Transactions'
 import { Statements } from '@/sections/shared/Statements'
 import { ApiKeys } from '@/sections/dev/ApiKeys'
 import { Webhooks } from '@/sections/dev/Webhooks'
+import { Withdrawals } from '@/sections/dev/Withdrawals'
+import { Collections } from '@/sections/dev/Collections'
 // Section views — ops
 import { SuspenseQueue } from '@/sections/ops/SuspenseQueue'
+import { OpsLedger } from '@/sections/ops/OpsLedger'
 import { AuditLog } from '@/sections/ops/AuditLog'
 
 function SectionContent() {
@@ -36,9 +39,12 @@ function SectionContent() {
   if (role === 'dev' && section === 'statements') return <Statements />
   if (role === 'dev' && section === 'keys') return <ApiKeys />
   if (role === 'dev' && section === 'webhooks') return <Webhooks />
+  if (role === 'dev' && section === 'withdrawals') return <Withdrawals />
+  if (role === 'dev' && section === 'collections') return <Collections />
 
   // Ops
   if (role === 'ops' && section === 'suspense') return <SuspenseQueue />
+  if (role === 'ops' && section === 'opsLedger') return <OpsLedger />
   if (role === 'ops' && section === 'opscustomers') return <Customers readonly={true} />
   if (role === 'ops' && section === 'opsstatements') return <Statements />
   if (role === 'ops' && section === 'audit') return <AuditLog />

@@ -51,15 +51,19 @@ const ROLE_LABELS: Record<string, string> = {
 
 interface AuthState {
   user: AuthUser | null
+  isLocked: boolean
   error: string | null
   loading: boolean
   login: (email: string, password: string) => Promise<boolean>
+  unlock: (email: string, password: string) => Promise<boolean>
+  lock: () => void
   logout: () => void
   clearError: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: loadSession(),
+  isLocked: false,
   error: null,
   loading: false,
 
@@ -83,7 +87,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       saveSession(user)
-      set({ user, error: null, loading: false })
+      set({ user, isLocked: false, error: null, loading: false })
       return true
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed'
@@ -92,11 +96,41 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+  // Re-authenticate without destroying the session identity (lock screen flow).
+  unlock: async (email, password) => {
+    const { user } = get()
+    set({ loading: true, error: null })
+    try {
+      const res = await authApi.login(email, password)
+      // Verify the unlocking user is the same account that locked.
+      if (user && res.email !== user.email) {
+        set({ error: 'Please sign in with the same account.', loading: false })
+        return false
+      }
+      if (res.api_key) setApiToken(res.api_key)
+      setAdminToken(res.admin_token ?? null)
+      set({ isLocked: false, error: null, loading: false })
+      return true
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Incorrect credentials'
+      set({ error: msg, loading: false })
+      return false
+    }
+  },
+
+  // Lock the session: revoke tokens in memory but retain user identity so the
+  // lock screen can show who is locked and verify the same account on unlock.
+  lock: () => {
+    setApiToken(null)
+    setAdminToken(null)
+    set({ isLocked: true, error: null })
+  },
+
   logout: () => {
     saveSession(null)
     setApiToken(null)
     setAdminToken(null)
-    set({ user: null, error: null })
+    set({ user: null, isLocked: false, error: null })
   },
 
   clearError: () => set({ error: null }),

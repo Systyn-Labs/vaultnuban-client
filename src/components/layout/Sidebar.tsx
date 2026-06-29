@@ -14,6 +14,9 @@ import {
   LogOut,
   X,
   LayoutList,
+  Wallet,
+  ArrowUpRight,
+  Inbox,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore, type Role, type Section } from '@/store/app.store'
@@ -35,9 +38,12 @@ export const NAV_DEFS: Record<Role, { key: Section; label: string; Icon: React.E
     { key: 'statements', label: 'Statements', Icon: FileText },
     { key: 'keys', label: 'API Keys', Icon: Key },
     { key: 'webhooks', label: 'Webhooks', Icon: Webhook },
+    { key: 'withdrawals', label: 'Withdrawals', Icon: ArrowUpRight },
+    { key: 'collections', label: 'Collections', Icon: Inbox },
   ],
   ops: [
     { key: 'suspense', label: 'Suspense Queue', Icon: AlertTriangle },
+    { key: 'opsLedger', label: 'Ledger', Icon: Wallet },
     { key: 'opscustomers', label: 'Customers', Icon: Users },
     { key: 'opsstatements', label: 'Statements', Icon: FileText },
     { key: 'audit', label: 'Audit Log', Icon: Clock },
