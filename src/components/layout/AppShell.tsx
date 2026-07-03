@@ -1,87 +1,44 @@
-import { useCallback, useRef, useState } from 'react'
-import { SidebarWithRef } from './Sidebar'
-import { MobileTopBar } from './MobileTopBar'
-import { Toaster } from '@/components/ui/toast'
-import { useAppStore } from '@/store/app.store'
+import { type ReactNode } from "react";
+import { Sidebar } from "./Sidebar";
+import { TopBar } from "./TopBar";
+import { SendMoneyWizard } from "@/components/tx/SendMoneyWizard";
+import { TransactionDetailDrawer } from "@/components/tx/TransactionDetailDrawer";
+import { LedgerViewDrawer } from "@/components/accounts/LedgerViewDrawer";
+import { ClientOnly } from "@/components/ClientOnly";
+import { Toaster } from "@/components/ui/sonner";
 
-// Section views — admin
-import { GlobalHealth } from '@/sections/admin/GlobalHealth'
-import { Tenants } from '@/sections/admin/Tenants'
-import { CrossTenantSuspense } from '@/sections/admin/CrossTenantSuspense'
-import { AllVirtualAccounts } from '@/sections/admin/AllVirtualAccounts'
-// Section views — dev
-import { VirtualAccounts } from '@/sections/dev/VirtualAccounts'
-import { Customers } from '@/sections/shared/Customers'
-import { Transactions } from '@/sections/dev/Transactions'
-import { Statements } from '@/sections/shared/Statements'
-import { ApiKeys } from '@/sections/dev/ApiKeys'
-import { Webhooks } from '@/sections/dev/Webhooks'
-import { Withdrawals } from '@/sections/dev/Withdrawals'
-import { Collections } from '@/sections/dev/Collections'
-// Section views — ops
-import { SuspenseQueue } from '@/sections/ops/SuspenseQueue'
-import { OpsLedger } from '@/sections/ops/OpsLedger'
-import { AuditLog } from '@/sections/ops/AuditLog'
-
-function SectionContent() {
-  const { section, role } = useAppStore()
-
-  // Admin
-  if (role === 'admin' && section === 'health') return <GlobalHealth />
-  if (role === 'admin' && section === 'tenants') return <Tenants />
-  if (role === 'admin' && section === 'xsuspense') return <CrossTenantSuspense />
-  if (role === 'admin' && section === 'allaccounts') return <AllVirtualAccounts />
-
-  // Dev
-  if (role === 'dev' && section === 'accounts') return <VirtualAccounts />
-  if (role === 'dev' && section === 'customers') return <Customers readonly={false} />
-  if (role === 'dev' && section === 'transactions') return <Transactions />
-  if (role === 'dev' && section === 'statements') return <Statements />
-  if (role === 'dev' && section === 'keys') return <ApiKeys />
-  if (role === 'dev' && section === 'webhooks') return <Webhooks />
-  if (role === 'dev' && section === 'withdrawals') return <Withdrawals />
-  if (role === 'dev' && section === 'collections') return <Collections />
-
-  // Ops
-  if (role === 'ops' && section === 'suspense') return <SuspenseQueue />
-  if (role === 'ops' && section === 'opsLedger') return <OpsLedger />
-  if (role === 'ops' && section === 'opscustomers') return <Customers readonly={true} />
-  if (role === 'ops' && section === 'opsstatements') return <Statements />
-  if (role === 'ops' && section === 'audit') return <AuditLog />
-
-  return null
+function TopBarFallback() {
+  return <div className="h-14 border-b bg-surface" />;
 }
 
-export function AppShell() {
-  const { role, section } = useAppStore()
-  const openSidebarRef = useRef<() => void>(() => {})
-  const [, forceUpdate] = useState(0)
-
-  const registerOpen = useCallback((fn: () => void) => {
-    openSidebarRef.current = fn
-    forceUpdate((n) => n + 1)
-  }, [])
-
+function ContentFallback() {
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#0E1525' }}>
-      <SidebarWithRef registerOpen={registerOpen} />
+    <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-8 md:py-8">
+      <div className="h-28 animate-pulse border bg-surface" />
+      <div className="mt-6 h-32 animate-pulse border bg-surface" />
+      <div className="mt-6 h-96 animate-pulse border bg-surface" />
+    </div>
+  );
+}
 
-      {/* Main content column */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Mobile top bar */}
-        <MobileTopBar onMenuClick={() => openSidebarRef.current()} />
-
-        {/* Scrollable content — key forces scroll-to-top on section change */}
-        <main
-          key={`${role}-${section}`}
-          className="flex-1 overflow-y-auto"
-          style={{ background: '#111827' }}
-        >
-          <SectionContent />
+export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-screen w-full bg-background">
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <ClientOnly fallback={<TopBarFallback />}>
+          <TopBar />
+        </ClientOnly>
+        <main className="flex-1 overflow-x-hidden">
+          <ClientOnly fallback={<ContentFallback />}>{children}</ClientOnly>
         </main>
       </div>
-
-      <Toaster />
+      <ClientOnly>
+        <SendMoneyWizard />
+        <TransactionDetailDrawer />
+        <LedgerViewDrawer />
+        <Toaster position="bottom-right" richColors />
+      </ClientOnly>
     </div>
-  )
+  );
 }

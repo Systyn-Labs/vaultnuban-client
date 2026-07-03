@@ -1,42 +1,32 @@
-import * as React from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+
+import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors',
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
-        default: 'bg-accent/20 text-accent',
-        active: 'bg-green-bg text-green-text',
-        suspended: 'bg-amber-bg text-amber-text',
-        closed: 'bg-surface-2 text-text-muted',
-        inactive: 'bg-surface-2 text-text-muted',
-        credit: 'bg-green-bg text-green-text',
-        debit: 'bg-red-bg text-red-text',
-        tier1: 'bg-blue-bg text-blue-text',
-        tier2: 'bg-purple-bg text-purple-text',
-        tier3: 'bg-green-bg text-green-text',
-        dev: 'bg-blue-bg text-blue-text',
-        ops: 'bg-green-bg text-green-text',
-        both: 'bg-purple-bg text-purple-text',
-        unmatched: 'bg-red-bg text-red-text',
-        closed_account: 'bg-amber-bg text-amber-text',
-        amount_mismatch: 'bg-purple-bg text-purple-text',
-        tier_limit: 'bg-blue-bg text-blue-text',
-        webhook: 'bg-blue-bg text-blue-text',
-        sweep: 'bg-purple-bg text-purple-text',
-        manual: 'bg-surface-2 text-text-secondary',
+        default: "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
+        outline: "text-foreground",
       },
     },
-    defaultVariants: { variant: 'default' },
-  }
-)
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 
-export function Badge({ className, variant, ...props }: BadgeProps) {
-  return <span className={cn(badgeVariants({ variant }), className)} {...props} />
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
+
+export { Badge, badgeVariants };

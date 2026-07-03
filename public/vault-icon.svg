@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#4338CA"/>
-  <!-- Left arm: cream -->
-  <path d="M14,10 L27,10 L34,50 L21,50 Z" fill="#F6F2E9"/>
-  <!-- Right arm: amber/white tint -->
-  <path d="M50,10 L37,10 L30,50 L43,50 Z" fill="rgba(255,255,255,0.85)"/>
-</svg>

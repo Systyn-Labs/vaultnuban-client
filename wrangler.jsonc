@@ -1,0 +1,12 @@
+{
+  // Only used for local `wrangler pages dev` / `wrangler pages deploy`
+  // previews. The live site's actual deploys are driven by Cloudflare's
+  // dashboard-configured Pages build (git integration), which does NOT
+  // read this file — the project's build command, output directory, and
+  // environment variables (VITE_API_BASE_URL) must be set there directly.
+  //
+  // Build command:    bun run build   (or: npm run build)
+  // Output directory: dist
+  "name": "vaultnuban-client",
+  "compatibility_date": "2026-07-03",
+}

@@ -1,278 +1,176 @@
-import React, { useState } from 'react'
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Activity,
-  Building2,
-  CreditCard,
-  Users,
+  LayoutGrid,
   ArrowLeftRight,
-  FileText,
-  Key,
-  Webhook,
-  AlertTriangle,
-  Clock,
-  Layers,
-  LogOut,
-  X,
-  LayoutList,
+  Send,
   Wallet,
-  ArrowUpRight,
+  Users,
+  ScrollText,
+  ShieldAlert,
+  Circle,
+  KeyRound,
+  Webhook,
   Inbox,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useAppStore, type Role, type Section } from '@/store/app.store'
-import { useAuthStore } from '@/store/auth.store'
+  HeartPulse,
+  Building2,
+  RefreshCw,
+  Scale,
+  SlidersHorizontal,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useSession, type Role } from "@/data/session";
 
-// ─── Nav definitions ─────────────────────────────────────────────────────────
-
-export const NAV_DEFS: Record<Role, { key: Section; label: string; Icon: React.ElementType }[]> = {
-  admin: [
-    { key: 'health', label: 'Global Health', Icon: Activity },
-    { key: 'tenants', label: 'Tenants', Icon: Building2 },
-    { key: 'xsuspense', label: 'Cross-tenant Suspense', Icon: Layers },
-    { key: 'allaccounts', label: 'All Virtual Accounts', Icon: LayoutList },
-  ],
-  dev: [
-    { key: 'accounts', label: 'Virtual Accounts', Icon: CreditCard },
-    { key: 'customers', label: 'Customers', Icon: Users },
-    { key: 'transactions', label: 'Transactions', Icon: ArrowLeftRight },
-    { key: 'statements', label: 'Statements', Icon: FileText },
-    { key: 'keys', label: 'API Keys', Icon: Key },
-    { key: 'webhooks', label: 'Webhooks', Icon: Webhook },
-    { key: 'withdrawals', label: 'Withdrawals', Icon: ArrowUpRight },
-    { key: 'collections', label: 'Collections', Icon: Inbox },
-  ],
-  ops: [
-    { key: 'suspense', label: 'Suspense Queue', Icon: AlertTriangle },
-    { key: 'opsLedger', label: 'Ledger', Icon: Wallet },
-    { key: 'opscustomers', label: 'Customers', Icon: Users },
-    { key: 'opsstatements', label: 'Statements', Icon: FileText },
-    { key: 'audit', label: 'Audit Log', Icon: Clock },
-  ],
+interface Item {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+interface Group {
+  label: string;
+  items: Item[];
 }
 
-export const ROLE_META: Record<Role, { label: string; user: string; initials: string }> = {
-  dev: { label: 'Tenant Developer', user: 'Adaeze Okonkwo', initials: 'AO' },
-  ops: { label: 'Tenant Ops', user: 'Bisi Thomas', initials: 'BT' },
-  admin: { label: 'Platform Admin', user: 'Systyn Operator', initials: 'SO' },
+// Navigation trees per persona (PDL: grouped by operational workflow).
+const opsGroups: Group[] = [
+  {
+    label: "Overview",
+    items: [{ to: "/", label: "Dashboard", icon: LayoutGrid }],
+  },
+  {
+    label: "Money",
+    items: [
+      { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
+      { to: "/send", label: "Send Money", icon: Send },
+      { to: "/collections", label: "Collections", icon: Inbox },
+    ],
+  },
+  {
+    label: "Accounts",
+    items: [
+      { to: "/customers", label: "Customers", icon: Users },
+      { to: "/accounts", label: "Virtual Accounts", icon: Wallet },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { to: "/suspense", label: "Suspense", icon: ShieldAlert },
+      { to: "/developers/audit", label: "Audit Trail", icon: ScrollText },
+    ],
+  },
+];
+
+const devGroups: Group[] = [
+  {
+    label: "Developers",
+    items: [
+      { to: "/developers/api-keys", label: "API Keys", icon: KeyRound },
+      { to: "/developers/webhooks", label: "Webhooks", icon: Webhook },
+      { to: "/developers/audit", label: "Audit Trail", icon: ScrollText },
+    ],
+  },
+  {
+    label: "Reference",
+    items: [
+      { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
+      { to: "/accounts", label: "Virtual Accounts", icon: Wallet },
+    ],
+  },
+];
+
+const adminGroups: Group[] = [
+  {
+    label: "Platform",
+    items: [
+      { to: "/admin", label: "Health", icon: HeartPulse },
+      { to: "/admin/tenants", label: "Tenants", icon: Building2 },
+    ],
+  },
+  {
+    label: "Reconciliation",
+    items: [
+      { to: "/admin/sweeps", label: "Sweep Runs", icon: RefreshCw },
+      { to: "/admin/suspense", label: "Suspense", icon: ShieldAlert },
+      { to: "/admin/recon", label: "VA Reconciliation", icon: Scale },
+    ],
+  },
+  {
+    label: "Settings",
+    items: [{ to: "/admin/settings", label: "Tier Limits", icon: SlidersHorizontal }],
+  },
+];
+
+function groupsFor(role: Role | undefined): Group[] {
+  switch (role) {
+    case "admin":
+      return adminGroups;
+    case "dev":
+      return devGroups;
+    default:
+      return opsGroups;
+  }
 }
-
-// ─── Logo ─────────────────────────────────────────────────────────────────────
-
-function Logo() {
-  return (
-    <div className="flex items-center gap-3">
-      {/* V-mark: two geometric arms echoing Systyn Labs brand language */}
-      <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true" className="flex-shrink-0">
-        <rect width="64" height="64" rx="12" fill="#4338CA"/>
-        <path d="M14,10 L27,10 L34,50 L21,50 Z" fill="#F6F2E9"/>
-        <path d="M50,10 L37,10 L30,50 L43,50 Z" fill="rgba(255,255,255,0.82)"/>
-      </svg>
-      <div>
-        <p className="text-[13.5px] font-bold tracking-tight text-text-primary">VaultNUBAN</p>
-        <p className="font-mono text-[10px] leading-tight text-text-muted">Σ debits = Σ credits ✓</p>
-      </div>
-    </div>
-  )
-}
-
-// ─── Nav Items ────────────────────────────────────────────────────────────────
-
-function NavItems({ onClose }: { onClose?: () => void }) {
-  const { role, section, setSection } = useAppStore()
-  const nav = NAV_DEFS[role]
-
-  return (
-    <nav className="flex-1 overflow-y-auto px-3">
-      {nav.map(({ key, label, Icon }) => {
-        const active = section === key
-        return (
-          <button
-            key={key}
-            onClick={() => {
-              setSection(key)
-              onClose?.()
-            }}
-            className={cn(
-              'mb-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] font-medium text-left transition-colors duration-100',
-              active
-                ? 'bg-[#1C2638] text-white'
-                : 'text-[#9BA6B8] hover:bg-[#1C2638]/60 hover:text-text-primary'
-            )}
-          >
-            <Icon
-              className={cn('h-4 w-4 flex-shrink-0', active ? 'text-white' : 'text-[#9BA6B8]')}
-            />
-            <span>{label}</span>
-          </button>
-        )
-      })}
-    </nav>
-  )
-}
-
-// ─── User Footer ──────────────────────────────────────────────────────────────
-
-function UserFooter() {
-  const { role } = useAppStore()
-  const meta = ROLE_META[role]
-  const authUser = useAuthStore((s) => s.user)
-  const logout = useAuthStore((s) => s.logout)
-
-  const displayName = authUser?.name ?? meta.user
-  const displayInitials = authUser?.initials ?? meta.initials
-  const displayLabel = authUser?.roleLabel ?? meta.label
-
-  return (
-    <div className="border-t border-[#1E2D42] px-4 py-[14px]">
-      <div className="flex items-center gap-3">
-        <div
-          className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
-          style={{ background: 'rgba(67,56,202,0.2)', color: '#818CF8' }}
-        >
-          {displayInitials}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium text-text-primary">{displayName}</p>
-          <p className="truncate text-[11px] text-text-muted">{displayLabel}</p>
-        </div>
-        <button
-          onClick={logout}
-          title="Sign out"
-          className="flex-shrink-0 rounded-md p-1.5 text-text-muted transition-colors hover:bg-surface-2 hover:text-red-text"
-          aria-label="Sign out"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ─── Sidebar Content ──────────────────────────────────────────────────────────
-
-function SidebarContent({ onClose }: { onClose?: () => void }) {
-  return (
-    <div className="flex h-full w-64 flex-col" style={{ background: '#0E1525' }}>
-      {/* Logo row */}
-      <div className="flex items-center justify-between px-4 py-[18px]">
-        <Logo />
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="ml-2 rounded-md p-1 text-text-muted hover:text-text-primary lg:hidden"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
-      </div>
-
-      {/* Nav */}
-      <NavItems onClose={onClose} />
-
-      {/* Docs link */}
-      <div className="px-3 pb-2">
-        <a
-          href="https://vaultnuban-docs.pages.dev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-text-muted transition-colors hover:bg-[#1C2638]/60 hover:text-text-primary"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-          <span>API Docs →</span>
-        </a>
-      </div>
-
-      {/* User footer */}
-      <UserFooter />
-    </div>
-  )
-}
-
-// ─── Sidebar (with mobile drawer) ────────────────────────────────────────────
 
 export function Sidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const session = useSession((s) => s.session);
+  const groups = groupsFor(session?.role);
+  const isAdmin = session?.role === "admin";
 
+  // The sidebar always shares the app background; the admin persona is
+  // distinguished by its label and navigation tree, not by surface color.
   return (
-    <>
-      {/* Mobile hamburger — rendered inside MobileTopBar, exposed via context */}
-      <button
-        id="sidebar-open-btn"
-        onClick={() => setMobileOpen(true)}
-        className="hidden"
-        aria-label="Open sidebar"
-      />
-
-      {/* Mobile backdrop */}
-      <div
-        className={cn(
-          'fixed inset-0 z-40 bg-black/60 transition-opacity duration-300 lg:hidden',
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        )}
-        onClick={() => setMobileOpen(false)}
-      />
-
-      {/* Mobile drawer */}
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-out lg:hidden',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        <SidebarContent onClose={() => setMobileOpen(false)} />
-      </aside>
-
-      {/* Desktop sidebar */}
-      <aside className="hidden flex-shrink-0 lg:flex" style={{ borderRight: '1px solid #1E2D42' }}>
-        <SidebarContent />
-      </aside>
-
-      {/* Expose open trigger for MobileTopBar */}
-      {/* We pass the setter down via a small exported hook instead */}
-    </>
-  )
-}
-
-
-export function SidebarWithRef({
-  registerOpen,
-}: {
-  registerOpen: (fn: () => void) => void
-}) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-
-  React.useEffect(() => {
-    registerOpen(() => setMobileOpen(true))
-  }, [registerOpen])
-
-  return (
-    <>
-      {/* Mobile backdrop */}
-      <div
-        className={cn(
-          'fixed inset-0 z-40 bg-black/60 transition-opacity duration-300 lg:hidden',
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        )}
-        onClick={() => setMobileOpen(false)}
-      />
-
-      {/* Mobile drawer */}
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-out lg:hidden',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        <SidebarContent onClose={() => setMobileOpen(false)} />
-      </aside>
-
-      {/* Desktop sidebar */}
-      <aside className="hidden flex-shrink-0 lg:flex" style={{ borderRight: '1px solid #1E2D42' }}>
-        <SidebarContent />
-      </aside>
-    </>
-  )
+    <aside className="hidden w-60 shrink-0 border-r bg-background text-foreground md:flex md:flex-col">
+      <div className="flex h-14 items-center gap-2 border-b px-5">
+        <div className="grid h-7 w-7 place-items-center rounded-sm bg-primary text-primary-foreground">
+          <Circle className="h-3.5 w-3.5" strokeWidth={2.5} />
+        </div>
+        <div className="leading-tight">
+          <div className="text-[13px] font-semibold tracking-tight">VaultNUBAN</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            {isAdmin ? "Platform Operations" : "Ledger OS"}
+          </div>
+        </div>
+      </div>
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        {groups.map((g) => (
+          <div key={g.label} className="mb-5">
+            <div className="mb-1 px-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+              {g.label}
+            </div>
+            <ul className="space-y-0.5">
+              {g.items.map((it) => {
+                const active =
+                  pathname === it.to ||
+                  (it.to !== "/" && it.to !== "/admin" && pathname.startsWith(it.to)) ||
+                  (it.to === "/admin" && pathname === "/admin");
+                return (
+                  <li key={it.label}>
+                    <Link
+                      to={it.to}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-sm px-2 py-1.5 text-[13px] transition-colors",
+                        active
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "hover:bg-sidebar-accent/70",
+                      )}
+                    >
+                      <it.icon className="h-3.5 w-3.5" />
+                      <span>{it.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+      <div className="border-t px-4 py-3 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-credit" />
+          {session?.tenantName ?? "Platform"} · {session?.role ?? "guest"}
+        </div>
+      </div>
+    </aside>
+  );
 }

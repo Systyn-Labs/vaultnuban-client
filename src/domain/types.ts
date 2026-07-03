@@ -1,0 +1,25 @@
+// The dashboard's domain model IS the VaultNUBAN API wire model.
+// Types come from the official SDK so the UI can never drift from the API.
+export type {
+  APIKey,
+  AuditEntry,
+  Balance,
+  Collection,
+  CollectionStatus,
+  Customer,
+  Identity,
+  Page,
+  PayeeResolution,
+  Statement,
+  StatementEntry,
+  SuspenseItem,
+  SuspenseReason,
+  Transaction,
+  VirtualAccount,
+  VirtualAccountListItem,
+  VirtualAccountStatus,
+  WebhookDelivery,
+  WebhookEndpoint,
+  Withdrawal,
+  WithdrawalStatus,
+} from "@systynlabs/vaultnuban";
