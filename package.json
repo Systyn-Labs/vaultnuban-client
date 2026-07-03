@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "deploy": "wrangler pages deploy dist"
+    "deploy": "wrangler pages deploy dist",
+    "test": "openssl rand -hex 64"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
