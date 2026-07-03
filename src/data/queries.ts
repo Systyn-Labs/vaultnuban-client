@@ -94,6 +94,11 @@ export const auditQuery = queryOptions({
   queryFn: () => vn().audit.list(),
 });
 
+export const mfaStatusQuery = queryOptions({
+  queryKey: ["mfa", "status"],
+  queryFn: () => vn().mfa.status(),
+});
+
 // ── Operator (/internal) queries ──────────────────────────────────────────────
 
 export interface PlatformHealth {

@@ -15,6 +15,8 @@ export interface Session {
   tenantName?: string;
   apiKey?: string; // tenant key (ops/dev)
   adminToken?: string; // operator token (admin)
+  userSessionToken?: string; // per-user session, distinct from the shared tenant API key
+  mfaEnabled: boolean;
 }
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -23,6 +25,8 @@ interface SessionState {
   session: Session | null;
   login: (email: string, password: string) => Promise<Session>;
   logout: () => void;
+  /** Updates the local mfaEnabled flag after a successful /v1/mfa/enable call. */
+  setMfaEnabled: (enabled: boolean) => void;
 }
 
 // `persist` reads sessionStorage asynchronously in the background starting
@@ -70,9 +74,15 @@ export const useSession = create<SessionState>()(
           tenantName: body.tenant_name,
           apiKey: body.api_key,
           adminToken: body.admin_token,
+          userSessionToken: body.user_session_token,
+          mfaEnabled: Boolean(body.mfa_enabled),
         };
         set({ session });
         return session;
+      },
+
+      setMfaEnabled(enabled) {
+        set((s) => (s.session ? { session: { ...s.session, mfaEnabled: enabled } } : s));
       },
 
       logout() {

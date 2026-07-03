@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Circle, KeyRound } from "lucide-react";
+import { Circle } from "lucide-react";
 import { homeForRole, useSession } from "@/data/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,32 +10,6 @@ export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in · VaultNUBAN" }] }),
   component: LoginPage,
 });
-
-// Seeded demo credentials — one per persona. Not a secret: these only exist
-// on local/demo databases seeded by the server's bootstrap script.
-const TEST_ACCOUNTS = [
-  {
-    label: "Adaeze Okonkwo",
-    role: "Tenant Developer",
-    tenant: "Acme Fintech",
-    email: "ada@acme.io",
-    password: "Dev1234!",
-  },
-  {
-    label: "Bisi Thomas",
-    role: "Tenant Ops",
-    tenant: "Acme Fintech",
-    email: "bisi@acme.io",
-    password: "Ops1234!",
-  },
-  {
-    label: "Systyn Operator",
-    role: "Platform Admin",
-    tenant: "All tenants",
-    email: "operator@systyn.io",
-    password: "Admin1234!",
-  },
-] as const;
 
 function LoginPage() {
   const login = useSession((s) => s.login);
@@ -57,12 +31,6 @@ function LoginPage() {
     } finally {
       setBusy(false);
     }
-  }
-
-  function fillTestAccount(acct: (typeof TEST_ACCOUNTS)[number]) {
-    setEmail(acct.email);
-    setPassword(acct.password);
-    setError(null);
   }
 
   return (
@@ -125,43 +93,8 @@ function LoginPage() {
           </Button>
         </form>
 
-        <div className="mt-6">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Test credentials
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-          <div className="space-y-1.5">
-            {TEST_ACCOUNTS.map((acct) => (
-              <button
-                key={acct.email}
-                type="button"
-                onClick={() => fillTestAccount(acct)}
-                className="flex w-full items-center gap-3 border bg-surface px-3 py-2 text-left transition-colors hover:bg-muted/50"
-              >
-                <div className="grid h-7 w-7 shrink-0 place-items-center rounded-sm bg-surface-muted text-muted-foreground">
-                  <KeyRound className="h-3.5 w-3.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[12px] font-medium">{acct.label}</div>
-                  <div className="truncate text-[11px] text-muted-foreground">
-                    {acct.role} · {acct.tenant}
-                  </div>
-                </div>
-                <div className="tabular shrink-0 text-right text-[10px] text-muted-foreground">
-                  <div className="truncate">{acct.email}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-          <p className="mt-2 text-center text-[11px] text-muted-foreground">
-            Click a credential to fill the form, then sign in.
-          </p>
-        </div>
-
         <p className="mt-6 text-center text-[11px] text-muted-foreground">
+          Two-factor authentication is required for actions on sensitive records.
           Every session is recorded in the audit trail.
         </p>
       </div>

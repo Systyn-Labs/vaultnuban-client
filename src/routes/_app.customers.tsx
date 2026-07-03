@@ -10,6 +10,7 @@ import { customersQuery, virtualAccountsQuery } from "@/data/queries";
 import { vn } from "@/data/client";
 import { formatDateTime } from "@/lib/format";
 import { useUi } from "@/state/uiStore";
+import { useRequireStepUp } from "@/components/auth/StepUpProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,11 +45,15 @@ function CustomersPage() {
   const { data: vaPage } = useSuspenseQuery(virtualAccountsQuery);
   const openStatement = useUi((s) => s.openStatement);
   const qc = useQueryClient();
+  const requireStepUp = useRequireStepUp();
   const customers = customerPage.data ?? [];
   const vaByCustomer = new Map((vaPage.data ?? []).map((v) => [v.customer_id, v]));
 
   const provision = useMutation({
-    mutationFn: (customerId: string) => vn().virtualAccounts.provision(customerId),
+    mutationFn: async (customerId: string) => {
+      const stepUpToken = await requireStepUp();
+      return vn().virtualAccounts.provision(customerId, undefined, { stepUpToken });
+    },
     onSuccess: (va) => {
       toast.success("Virtual account provisioned", {
         description: `${va.nuban} · ${va.bank_name}`,

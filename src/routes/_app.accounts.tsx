@@ -8,6 +8,7 @@ import { vn } from "@/data/client";
 import { formatDateTime, maskNuban } from "@/lib/format";
 import { StatusPill } from "@/components/tx/StatusPill";
 import { useUi } from "@/state/uiStore";
+import { useRequireStepUp } from "@/components/auth/StepUpProvider";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -36,11 +37,14 @@ function AccountsPage() {
   const { data: page } = useSuspenseQuery(virtualAccountsQuery);
   const openStatement = useUi((s) => s.openStatement);
   const qc = useQueryClient();
+  const requireStepUp = useRequireStepUp();
   const vas = page.data ?? [];
 
   const update = useMutation({
-    mutationFn: ({ customerId, status }: { customerId: string; status: "ACTIVE" | "SUSPENDED" }) =>
-      vn().virtualAccounts.update(customerId, { status }),
+    mutationFn: async ({ customerId, status }: { customerId: string; status: "ACTIVE" | "SUSPENDED" }) => {
+      const stepUpToken = await requireStepUp();
+      return vn().virtualAccounts.update(customerId, { status }, { stepUpToken });
+    },
     onSuccess: (_, v) => {
       toast.success(v.status === "SUSPENDED" ? "Account suspended" : "Account reactivated");
       qc.invalidateQueries({ queryKey: ["virtual-accounts"] });
@@ -50,7 +54,10 @@ function AccountsPage() {
   });
 
   const close = useMutation({
-    mutationFn: (customerId: string) => vn().virtualAccounts.close(customerId),
+    mutationFn: async (customerId: string) => {
+      const stepUpToken = await requireStepUp();
+      return vn().virtualAccounts.close(customerId, { stepUpToken });
+    },
     onSuccess: () => {
       toast.success("Account closed", { description: "Incoming payments now route to suspense." });
       qc.invalidateQueries({ queryKey: ["virtual-accounts"] });

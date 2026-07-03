@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Plus, LogOut, Sun, Moon, MonitorSmartphone, Check } from "lucide-react";
+import { Plus, LogOut, Sun, Moon, MonitorSmartphone, Check, ShieldCheck } from "lucide-react";
 import { useSession } from "@/data/session";
 import { useUi } from "@/state/uiStore";
 import { useTheme, type Theme } from "@/state/theme";
@@ -76,6 +76,14 @@ export function TopBar() {
                 {theme === t.value && <Check className="ml-auto h-3.5 w-3.5" />}
               </DropdownMenuItem>
             ))}
+            {isTenant && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate({ to: "/settings" })} className="gap-2">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Security settings
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {

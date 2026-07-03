@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUi } from "@/state/uiStore";
+import { useRequireStepUp } from "@/components/auth/StepUpProvider";
 import { vn } from "@/data/client";
 import { balanceQuery, customersQuery } from "@/data/queries";
 import { formatNaira } from "@/lib/format";
@@ -39,6 +40,7 @@ export function SendMoneyWizard() {
   const open = useUi((s) => s.sendMoneyOpen);
   const close = useUi((s) => s.closeSendMoney);
   const qc = useQueryClient();
+  const requireStepUp = useRequireStepUp();
 
   const [step, setStep] = useState<Step>("source");
   const [customerId, setCustomerId] = useState("");
@@ -69,14 +71,20 @@ export function SendMoneyWizard() {
   });
 
   const submit = useMutation({
-    mutationFn: () =>
-      vn().withdrawals.create(customerId, {
-        amount_kobo: amountKobo,
-        destination_bank_code: bankCode,
-        destination_account_number: resolved?.account_number ?? accountNumber,
-        destination_account_name: resolved?.account_name ?? "",
-        narration: narration || undefined,
-      }),
+    mutationFn: async () => {
+      const stepUpToken = await requireStepUp();
+      return vn().withdrawals.create(
+        customerId,
+        {
+          amount_kobo: amountKobo,
+          destination_bank_code: bankCode,
+          destination_account_number: resolved?.account_number ?? accountNumber,
+          destination_account_name: resolved?.account_name ?? "",
+          narration: narration || undefined,
+        },
+        { stepUpToken },
+      );
+    },
     onSuccess: (w) => {
       toast.success("Withdrawal initiated", {
         description: `Reference ${w.id} · ${formatNaira(w.amount_kobo)}`,

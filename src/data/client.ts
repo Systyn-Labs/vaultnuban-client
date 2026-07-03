@@ -3,13 +3,15 @@ import { API_BASE_URL, useSession } from "./session";
 
 // One SDK instance per API key. The dashboard dogfoods the official
 // @systynlabs/vaultnuban SDK for every tenant-scoped (/v1/*) call.
-let cached: { key: string; client: VaultNuban } | null = null;
+let cached: { key: string; userSessionToken?: string; client: VaultNuban } | null = null;
 
 export function vn(): VaultNuban {
-  const key = useSession.getState().session?.apiKey;
+  const session = useSession.getState().session;
+  const key = session?.apiKey;
   if (!key) throw new Error("Not authenticated as a tenant user");
-  if (cached?.key !== key) {
-    cached = { key, client: new VaultNuban({ apiKey: key, baseUrl: API_BASE_URL }) };
+  const userSessionToken = session?.userSessionToken;
+  if (cached?.key !== key || cached?.userSessionToken !== userSessionToken) {
+    cached = { key, userSessionToken, client: new VaultNuban({ apiKey: key, userSessionToken, baseUrl: API_BASE_URL }) };
   }
   return cached.client;
 }
