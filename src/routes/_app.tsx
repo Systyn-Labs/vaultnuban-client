@@ -6,8 +6,10 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
 import { useSession } from "@/data/session";
+import { subscribeToTransactionEvents } from "@/data/realtime";
 
 // Layout route for the entire authenticated dashboard experience.
 // The underscore prefix makes this a pathless layout — child routes' URLs
@@ -41,6 +43,7 @@ function LayoutComponent() {
   const session = useSession((s) => s.session);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const queryClient = useQueryClient();
   // `useSession.persist` must never be touched during the useState initializer:
   // that function also runs on the server (Node has no `document`, but React's
   // SSR pass still executes it), where the persist API is unavailable and
@@ -67,6 +70,15 @@ function LayoutComponent() {
     if (isAdminRoute && session.role !== "admin") navigate({ to: "/" });
     if (!isAdminRoute && session.role === "admin") navigate({ to: "/admin" });
   }, [hydrated, session, pathname, navigate]);
+
+  // Instant refresh: subscribe once per tenant session to the SSE stream so
+  // webhook/sweep-posted transactions refetch immediately instead of waiting
+  // on the next poll. Only tenant sessions (ops/dev) hold an apiKey — admin
+  // has nothing to subscribe to.
+  useEffect(() => {
+    if (!hydrated || !session?.apiKey) return;
+    return subscribeToTransactionEvents(queryClient);
+  }, [hydrated, session?.apiKey, queryClient]);
 
   return (
     <AppShell>
