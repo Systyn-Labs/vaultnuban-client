@@ -1,5 +1,6 @@
-import { VaultNuban, HttpClient } from "@systynlabs/vaultnuban";
+import { VaultNuban } from "@systynlabs/vaultnuban";
 import { API_BASE_URL, useSession } from "./session";
+import { AdminHttpClient } from "./adminHttp";
 
 // One SDK instance per API key. The dashboard dogfoods the official
 // @systynlabs/vaultnuban SDK for every tenant-scoped (/v1/*) call.
@@ -16,15 +17,16 @@ export function vn(): VaultNuban {
   return cached.client;
 }
 
-// /internal/* endpoints share bearer-auth semantics, so the SDK's HTTP core
-// (problem+json errors, retries, pagination) is reused with the operator token.
-let cachedAdmin: { key: string; http: HttpClient } | null = null;
+// /internal/* is the admin-only surface — deliberately NOT the published SDK
+// (that's for tenant-facing /v1/* integrators only). AdminHttpClient sends
+// X-Admin-Session, the per-admin session minted at POST /internal/auth/login.
+let cachedAdmin: { key: string; http: AdminHttpClient } | null = null;
 
-export function adminHttp(): HttpClient {
-  const token = useSession.getState().session?.adminToken;
+export function adminHttp(): AdminHttpClient {
+  const token = useSession.getState().session?.adminSessionToken;
   if (!token) throw new Error("Not authenticated as a platform operator");
   if (cachedAdmin?.key !== token) {
-    cachedAdmin = { key: token, http: new HttpClient({ apiKey: token, baseUrl: API_BASE_URL }) };
+    cachedAdmin = { key: token, http: new AdminHttpClient(token) };
   }
   return cachedAdmin.http;
 }

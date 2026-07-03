@@ -99,6 +99,18 @@ export const mfaStatusQuery = queryOptions({
   queryFn: () => vn().mfa.status(),
 });
 
+export interface MfaStatus {
+  enabled: boolean;
+  recovery_codes_remaining: number;
+}
+
+// Admin's own MFA status — same shape as the tenant query, but reached via
+// the admin-only /internal/mfa/status endpoint (not the published SDK).
+export const adminMfaStatusQuery = queryOptions({
+  queryKey: ["admin", "mfa", "status"],
+  queryFn: () => adminHttp().get<MfaStatus>("/internal/mfa/status"),
+});
+
 // ── Operator (/internal) queries ──────────────────────────────────────────────
 
 export interface PlatformHealth {
@@ -126,9 +138,92 @@ export interface SweepRun {
 export interface TenantSummary {
   id: string;
   name: string;
+  status?: "active" | "suspended" | "deleted";
   created_at?: string;
   [k: string]: unknown;
 }
+
+export interface TenantDetail {
+  tenant: TenantSummary;
+  customers: unknown[];
+  transactions: unknown[];
+  suspense: unknown[];
+  virtual_accounts: unknown[];
+  audit: {
+    id: string;
+    actor: string;
+    action: string;
+    entity_type: string;
+    entity_id: string;
+    at: string;
+  }[];
+}
+
+export const tenantDetailQuery = (tenantId: string) =>
+  queryOptions({
+    queryKey: ["internal", "tenants", tenantId],
+    queryFn: () => adminHttp().get<TenantDetail>(`/internal/tenants/${tenantId}`),
+    enabled: !!tenantId,
+  });
+
+export interface TierOverrides {
+  overrides: Record<string, { daily_credit_kobo: number; max_balance_kobo: number }> | null;
+}
+
+export const tenantTierLimitsQuery = (tenantId: string) =>
+  queryOptions({
+    queryKey: ["internal", "tenants", tenantId, "tier-limits"],
+    queryFn: () => adminHttp().get<TierOverrides>(`/internal/tenants/${tenantId}/tier-limits`),
+    enabled: !!tenantId,
+  });
+
+export interface TenantUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  active: boolean;
+  mfa_enabled: boolean;
+  created_at: string;
+}
+
+export const tenantUsersQuery = (tenantId: string) =>
+  queryOptions({
+    queryKey: ["internal", "tenants", tenantId, "users"],
+    queryFn: () => adminHttp().get<{ data: TenantUser[] }>(`/internal/tenants/${tenantId}/users`),
+    enabled: !!tenantId,
+  });
+
+export interface PlatformAuditEntry {
+  id: string;
+  tenant_id?: string;
+  actor: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  at: string;
+}
+
+export interface PlatformAuditFilters {
+  tenantId?: string;
+  actor?: string;
+  action?: string;
+}
+
+export const platformAuditQuery = (filters: PlatformAuditFilters) =>
+  queryOptions({
+    queryKey: ["internal", "audit", filters],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (filters.tenantId) params.set("tenant_id", filters.tenantId);
+      if (filters.actor) params.set("actor", filters.actor);
+      if (filters.action) params.set("action", filters.action);
+      const qs = params.toString();
+      return adminHttp().get<{ data: PlatformAuditEntry[] }>(
+        `/internal/audit${qs ? `?${qs}` : ""}`,
+      );
+    },
+  });
 
 export const platformHealthQuery = queryOptions({
   queryKey: ["internal", "health"],

@@ -14,8 +14,8 @@ export interface Session {
   tenantId?: string;
   tenantName?: string;
   apiKey?: string; // tenant key (ops/dev)
-  adminToken?: string; // operator token (admin)
   userSessionToken?: string; // per-user session, distinct from the shared tenant API key
+  adminSessionToken?: string; // per-admin session (X-Admin-Session), admin persona only
   mfaEnabled: boolean;
 }
 
@@ -24,8 +24,10 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localho
 interface SessionState {
   session: Session | null;
   login: (email: string, password: string) => Promise<Session>;
+  /** Platform-admin login — POST /internal/auth/login, distinct endpoint and session type. */
+  adminLogin: (email: string, password: string) => Promise<Session>;
   logout: () => void;
-  /** Updates the local mfaEnabled flag after a successful /v1/mfa/enable call. */
+  /** Updates the local mfaEnabled flag after a successful /mfa/enable call. */
   setMfaEnabled: (enabled: boolean) => void;
 }
 
@@ -73,8 +75,30 @@ export const useSession = create<SessionState>()(
           tenantId: body.tenant_id,
           tenantName: body.tenant_name,
           apiKey: body.api_key,
-          adminToken: body.admin_token,
           userSessionToken: body.user_session_token,
+          mfaEnabled: Boolean(body.mfa_enabled),
+        };
+        set({ session });
+        return session;
+      },
+
+      async adminLogin(email, password) {
+        await waitForHydration();
+        const resp = await fetch(`${API_BASE_URL}/internal/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        if (!resp.ok) {
+          const problem = await resp.json().catch(() => null);
+          throw new Error(problem?.detail ?? "Invalid email or password");
+        }
+        const body = await resp.json();
+        const session: Session = {
+          name: body.name,
+          email: body.email,
+          role: body.role as Role,
+          adminSessionToken: body.admin_session_token,
           mfaEnabled: Boolean(body.mfa_enabled),
         };
         set({ session });

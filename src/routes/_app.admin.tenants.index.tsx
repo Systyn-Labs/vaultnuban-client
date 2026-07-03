@@ -1,5 +1,5 @@
 import { Suspense, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Building2, Loader2 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const Route = createFileRoute("/_app/admin/tenants")({
+export const Route = createFileRoute("/_app/admin/tenants/")({
   head: () => ({ meta: [{ title: "Tenants · VaultNUBAN" }] }),
   component: () => (
     <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-8 md:py-8">
@@ -39,6 +39,7 @@ export const Route = createFileRoute("/_app/admin/tenants")({
 function TenantsPage() {
   const { data: payload } = useSuspenseQuery(tenantsQuery);
   const tenants = rows<TenantSummary>(payload);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -57,6 +58,9 @@ function TenantsPage() {
         data={tenants}
         searchPlaceholder="Search tenants…"
         initialSorting={[{ id: "name", desc: false }]}
+        onRowClick={(row) =>
+          navigate({ to: "/admin/tenants/$tenantId", params: { tenantId: row.id } })
+        }
         emptyState={
           <div className="border bg-surface px-4 py-16 text-center">
             <Building2 className="mx-auto h-5 w-5 text-muted-foreground" />
@@ -76,6 +80,24 @@ const tenantColumns: ColumnDef<TenantSummary>[] = [
     accessorKey: "name",
     header: ({ column }) => <SortableHeader column={column}>Tenant</SortableHeader>,
     cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <SortableHeader column={column}>Status</SortableHeader>,
+    cell: ({ row }) => {
+      const status = row.original.status ?? "active";
+      return (
+        <span
+          className={`px-1.5 py-0.5 text-[10px] uppercase tracking-widest ${
+            status === "active"
+              ? "bg-credit-soft text-credit"
+              : "bg-status-failed-soft text-status-failed"
+          }`}
+        >
+          {status}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "id",

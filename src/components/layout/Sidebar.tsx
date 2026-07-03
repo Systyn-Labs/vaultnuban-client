@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Scale,
   SlidersHorizontal,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession, type Role } from "@/data/session";
@@ -84,6 +85,7 @@ const adminGroups: Group[] = [
     items: [
       { to: "/admin", label: "Health", icon: HeartPulse },
       { to: "/admin/tenants", label: "Tenants", icon: Building2 },
+      { to: "/admin/audit", label: "Audit Log", icon: ScrollText },
     ],
   },
   {
@@ -96,7 +98,10 @@ const adminGroups: Group[] = [
   },
   {
     label: "Settings",
-    items: [{ to: "/admin/settings", label: "Tier Limits", icon: SlidersHorizontal }],
+    items: [
+      { to: "/admin/settings", label: "Tier Limits", icon: SlidersHorizontal },
+      { to: "/admin/security", label: "Security", icon: ShieldCheck },
+    ],
   },
 ];
 

@@ -13,8 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { vn } from "@/data/client";
-import { mfaStatusQuery } from "@/data/queries";
+import { vn, adminHttp } from "@/data/client";
+import { mfaStatusQuery, adminMfaStatusQuery } from "@/data/queries";
+import { useSession } from "@/data/session";
 
 interface StepUpState {
   open: boolean;
@@ -44,15 +45,17 @@ export function useRequireStepUp() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const request = useStepUpStore((s) => s.request);
+  const isAdmin = useSession((s) => s.session?.role === "admin");
 
   return useCallback(async (): Promise<string> => {
-    const status = qc.getQueryData(mfaStatusQuery.queryKey) ?? (await qc.fetchQuery(mfaStatusQuery));
+    const query = isAdmin ? adminMfaStatusQuery : mfaStatusQuery;
+    const status = qc.getQueryData(query.queryKey) ?? (await qc.fetchQuery(query));
     if (!status.enabled) {
-      navigate({ to: "/settings" });
+      navigate({ to: isAdmin ? "/admin/security" : "/settings" });
       throw new Error("Two-factor authentication is required for this action. Please finish setting it up.");
     }
     return new Promise<string>((resolve, reject) => request(resolve, reject));
-  }, [qc, navigate, request]);
+  }, [qc, navigate, request, isAdmin]);
 }
 
 /** Rendered once at the app root; renders the code-entry dialog on demand. */
@@ -64,6 +67,7 @@ export function StepUpDialog() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const isAdmin = useSession((s) => s.session?.role === "admin");
 
   function reset() {
     setCode("");
@@ -75,7 +79,9 @@ export function StepUpDialog() {
     setBusy(true);
     setError(null);
     try {
-      const { step_up_token } = await vn().mfa.verify({ code });
+      const { step_up_token } = isAdmin
+        ? await adminHttp().post<{ step_up_token: string }>("/internal/mfa/verify", { code })
+        : await vn().mfa.verify({ code });
       resolve?.(step_up_token);
       settle();
       reset();

@@ -31,8 +31,7 @@ function SettingsPage() {
   }, [data]);
 
   const save = useMutation({
-    mutationFn: () =>
-      adminHttp().request<unknown>("PUT", "/internal/settings/tier-limits", { body: draft }),
+    mutationFn: () => adminHttp().put<unknown>("/internal/settings/tier-limits", draft),
     onSuccess: () => {
       toast.success("Tier limits saved");
       qc.invalidateQueries({ queryKey: ["internal", "tier-limits"] });

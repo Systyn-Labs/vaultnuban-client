@@ -81,7 +81,7 @@ function HealthPage() {
   const sweeps = rows(sweepPayload);
 
   const triggerSweep = useMutation({
-    mutationFn: () => adminHttp().get<unknown>("/internal/sweep"),
+    mutationFn: () => adminHttp().post<unknown>("/internal/sweep/trigger"),
     onSuccess: () => {
       toast.success("Sweep completed");
       qc.invalidateQueries({ queryKey: ["internal"] });

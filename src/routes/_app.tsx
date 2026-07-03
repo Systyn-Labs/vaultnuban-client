@@ -26,13 +26,13 @@ export const Route = createFileRoute("/_app")({
   beforeLoad: ({ location }) => {
     if (typeof document === "undefined") return; // SSR: no session store
     if (!useSession.persist.hasHydrated()) return; // rehydration still in flight
+    const isAdminRoute = location.pathname.startsWith("/admin");
     const session = useSession.getState().session;
     if (!session) {
-      throw redirect({ to: "/login" });
+      throw redirect({ to: isAdminRoute ? "/admin/login" : "/login" });
     }
     // Persona boundaries: /admin/* requires the operator role; tenant routes
     // require a tenant API key.
-    const isAdminRoute = location.pathname.startsWith("/admin");
     if (isAdminRoute && session.role !== "admin") throw redirect({ to: "/" });
     if (!isAdminRoute && session.role === "admin") throw redirect({ to: "/admin" });
   },
@@ -62,11 +62,11 @@ function LayoutComponent() {
   // client store has rehydrated (or immediately, on later SPA navigations).
   useEffect(() => {
     if (!hydrated) return;
+    const isAdminRoute = pathname.startsWith("/admin");
     if (!session) {
-      navigate({ to: "/login" });
+      navigate({ to: isAdminRoute ? "/admin/login" : "/login" });
       return;
     }
-    const isAdminRoute = pathname.startsWith("/admin");
     if (isAdminRoute && session.role !== "admin") navigate({ to: "/" });
     if (!isAdminRoute && session.role === "admin") navigate({ to: "/admin" });
   }, [hydrated, session, pathname, navigate]);

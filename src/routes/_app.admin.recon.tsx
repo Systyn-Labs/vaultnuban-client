@@ -1,8 +1,18 @@
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { StickyNote, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { queryOptions } from "@tanstack/react-query";
 import { internalVAsQuery, nombaVAsQuery, rows } from "@/data/queries";
+import { adminHttp } from "@/data/client";
+import { useRequireStepUp } from "@/components/auth/StepUpProvider";
 import { StatusPill } from "@/components/tx/StatusPill";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatDateTime } from "@/lib/format";
 
 interface LocalVA {
   id?: string;
@@ -19,6 +29,21 @@ interface NombaVA {
   status?: string;
   [k: string]: unknown;
 }
+
+interface ReconNote {
+  id: string;
+  resolved_by: string;
+  note: string;
+  resolved_at: string;
+}
+
+const reconNotesQuery = (vaRef: string) =>
+  queryOptions({
+    queryKey: ["internal", "recon-notes", vaRef],
+    queryFn: () =>
+      adminHttp().get<{ data: ReconNote[] }>(`/internal/nomba-virtual-accounts/${vaRef}/notes`),
+    enabled: !!vaRef,
+  });
 
 export const Route = createFileRoute("/_app/admin/recon")({
   head: () => ({ meta: [{ title: "VA Reconciliation · VaultNUBAN" }] }),
@@ -38,6 +63,7 @@ function ReconPage() {
   const { data: nombaPayload } = useSuspenseQuery(nombaVAsQuery);
   const local = rows<LocalVA>(localPayload as never);
   const nomba = rows<NombaVA>(nombaPayload as never);
+  const [notingRef, setNotingRef] = useState<string | null>(null);
 
   const { matched, localOnly, nombaOnly } = useMemo(() => {
     const nombaByNuban = new Map(nomba.filter((n) => n.nuban).map((n) => [n.nuban!, n]));
@@ -108,6 +134,7 @@ function ReconPage() {
               name: l.account_name,
               status: l.status,
             }))}
+            onAddNote={setNotingRef}
           />
           <ExceptionTable
             title="Provider only"
@@ -116,9 +143,12 @@ function ReconPage() {
               name: n.account_name,
               status: n.status,
             }))}
+            onAddNote={setNotingRef}
           />
         </div>
       )}
+
+      <NoteDialog vaRef={notingRef} onClose={() => setNotingRef(null)} />
     </>
   );
 }
@@ -126,9 +156,11 @@ function ReconPage() {
 function ExceptionTable({
   title,
   items,
+  onAddNote,
 }: {
   title: string;
   items: { nuban: string; name?: string; status?: string }[];
+  onAddNote: (vaRef: string) => void;
 }) {
   return (
     <div className="border bg-surface">
@@ -148,10 +180,90 @@ function ExceptionTable({
                 <div className="truncate text-[11px] text-muted-foreground">{it.name ?? "—"}</div>
               </div>
               {it.status && <StatusPill status={it.status} />}
+              <Button
+                size="sm"
+                variant="ghost"
+                className="gap-1"
+                onClick={() => onAddNote(it.nuban)}
+              >
+                <StickyNote className="h-3 w-3" /> Note
+              </Button>
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+function NoteDialog({ vaRef, onClose }: { vaRef: string | null; onClose: () => void }) {
+  const requireStepUp = useRequireStepUp();
+  const [note, setNote] = useState("");
+  const { data } = useQuery({ ...reconNotesQuery(vaRef ?? ""), enabled: !!vaRef });
+
+  const addNote = useMutation({
+    mutationFn: async () => {
+      if (!vaRef) throw new Error("no VA selected");
+      const stepUpToken = await requireStepUp();
+      return adminHttp().post(
+        `/internal/nomba-virtual-accounts/${vaRef}/notes`,
+        { note },
+        { stepUpToken },
+      );
+    },
+    onSuccess: () => {
+      toast.success("Note added");
+      setNote("");
+      onClose();
+    },
+    onError: (e) =>
+      toast.error("Could not add note", {
+        description: e instanceof Error ? e.message : undefined,
+      }),
+  });
+
+  return (
+    <Dialog open={!!vaRef} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-base">Reconciliation note — {vaRef}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-[11px] text-muted-foreground">
+            A review annotation only — this does not create, link, or modify any account record.
+          </p>
+          {data && data.data.length > 0 && (
+            <div className="max-h-40 space-y-2 overflow-auto border bg-surface-muted p-3 text-[12px]">
+              {data.data.map((n) => (
+                <div key={n.id}>
+                  <span className="font-medium">{n.resolved_by}</span>{" "}
+                  <span className="tabular text-muted-foreground">
+                    · {formatDateTime(n.resolved_at)}
+                  </span>
+                  <div className="text-muted-foreground">{n.note}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label htmlFor="recon-note">New note</Label>
+            <Input id="recon-note" value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" className="flex-1" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 gap-1.5"
+              disabled={addNote.isPending || note.length === 0}
+              onClick={() => addNote.mutate()}
+            >
+              {addNote.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Save note
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

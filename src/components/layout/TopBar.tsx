@@ -87,8 +87,9 @@ export function TopBar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
+                const wasAdmin = session?.role === "admin";
                 logout();
-                navigate({ to: "/login" });
+                navigate({ to: wasAdmin ? "/admin/login" : "/login" });
               }}
               className="gap-2"
             >
