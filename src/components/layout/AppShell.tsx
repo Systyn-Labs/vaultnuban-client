@@ -7,6 +7,7 @@ import { LedgerViewDrawer } from "@/components/accounts/LedgerViewDrawer";
 import { ClientOnly } from "@/components/ClientOnly";
 import { Toaster } from "@/components/ui/sonner";
 import { StepUpDialog } from "@/components/auth/StepUpProvider";
+import { SessionMonitor } from "@/components/auth/SessionMonitor";
 
 function TopBarFallback() {
   return <div className="h-14 border-b bg-surface" />;
@@ -39,6 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <TransactionDetailDrawer />
         <LedgerViewDrawer />
         <StepUpDialog />
+        <SessionMonitor />
         <Toaster position="bottom-right" richColors />
       </ClientOnly>
     </div>

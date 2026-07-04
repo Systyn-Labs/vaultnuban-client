@@ -17,6 +17,7 @@ export interface Session {
   userSessionToken?: string; // per-user session, distinct from the shared tenant API key
   adminSessionToken?: string; // per-admin session (X-Admin-Session), admin persona only
   mfaEnabled: boolean;
+  sessionExpiresAt?: string; // ISO timestamp — drives the expiry warning
 }
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -29,6 +30,8 @@ interface SessionState {
   logout: () => void;
   /** Updates the local mfaEnabled flag after a successful /mfa/enable call. */
   setMfaEnabled: (enabled: boolean) => void;
+  /** Extends the current session's server-side TTL; picks the right endpoint/header for the persona. */
+  refreshSession: () => Promise<void>;
 }
 
 // `persist` reads sessionStorage asynchronously in the background starting
@@ -77,6 +80,7 @@ export const useSession = create<SessionState>()(
           apiKey: body.api_key,
           userSessionToken: body.user_session_token,
           mfaEnabled: Boolean(body.mfa_enabled),
+          sessionExpiresAt: body.session_expires_at,
         };
         set({ session });
         return session;
@@ -100,6 +104,7 @@ export const useSession = create<SessionState>()(
           role: body.role as Role,
           adminSessionToken: body.admin_session_token,
           mfaEnabled: Boolean(body.mfa_enabled),
+          sessionExpiresAt: body.session_expires_at,
         };
         set({ session });
         return session;
@@ -107,6 +112,25 @@ export const useSession = create<SessionState>()(
 
       setMfaEnabled(enabled) {
         set((s) => (s.session ? { session: { ...s.session, mfaEnabled: enabled } } : s));
+      },
+
+      async refreshSession() {
+        const session = useSession.getState().session;
+        if (!session) return;
+        const isAdmin = session.role === "admin";
+        const path = isAdmin ? "/internal/auth/session/refresh" : "/auth/session/refresh";
+        const headerName = isAdmin ? "X-Admin-Session" : "X-User-Session";
+        const token = isAdmin ? session.adminSessionToken : session.userSessionToken;
+        if (!token) return;
+        const resp = await fetch(`${API_BASE_URL}${path}`, {
+          method: "POST",
+          headers: { [headerName]: token },
+        });
+        if (!resp.ok) throw new Error("Session refresh failed — please log in again");
+        const body = await resp.json();
+        set((s) =>
+          s.session ? { session: { ...s.session, sessionExpiresAt: body.session_expires_at } } : s,
+        );
       },
 
       logout() {
