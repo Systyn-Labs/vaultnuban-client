@@ -15,6 +15,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AppTransactionsRouteImport } from './routes/_app.transactions'
+import { Route as AppTeamRouteImport } from './routes/_app.team'
 import { Route as AppSuspenseRouteImport } from './routes/_app.suspense'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
@@ -22,6 +23,7 @@ import { Route as AppCollectionsRouteImport } from './routes/_app.collections'
 import { Route as AppAccountsRouteImport } from './routes/_app.accounts'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppDevelopersWebhooksRouteImport } from './routes/_app.developers.webhooks'
+import { Route as AppDevelopersUsageRouteImport } from './routes/_app.developers.usage'
 import { Route as AppDevelopersAuditRouteImport } from './routes/_app.developers.audit'
 import { Route as AppDevelopersApiKeysRouteImport } from './routes/_app.developers.api-keys'
 import { Route as AppAdminSweepsRouteImport } from './routes/_app.admin.sweeps'
@@ -62,6 +64,11 @@ const AppTransactionsRoute = AppTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTeamRoute = AppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSuspenseRoute = AppSuspenseRouteImport.update({
   id: '/suspense',
   path: '/suspense',
@@ -95,6 +102,11 @@ const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
 const AppDevelopersWebhooksRoute = AppDevelopersWebhooksRouteImport.update({
   id: '/developers/webhooks',
   path: '/developers/webhooks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDevelopersUsageRoute = AppDevelopersUsageRouteImport.update({
+  id: '/developers/usage',
+  path: '/developers/usage',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDevelopersAuditRoute = AppDevelopersAuditRouteImport.update({
@@ -157,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof AppCustomersRoute
   '/settings': typeof AppSettingsRoute
   '/suspense': typeof AppSuspenseRoute
+  '/team': typeof AppTeamRoute
   '/transactions': typeof AppTransactionsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/audit': typeof AppAdminAuditRoute
@@ -167,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/admin/sweeps': typeof AppAdminSweepsRoute
   '/developers/api-keys': typeof AppDevelopersApiKeysRoute
   '/developers/audit': typeof AppDevelopersAuditRoute
+  '/developers/usage': typeof AppDevelopersUsageRoute
   '/developers/webhooks': typeof AppDevelopersWebhooksRoute
   '/admin/': typeof AppAdminIndexRoute
   '/admin/tenants/$tenantId': typeof AppAdminTenantsTenantIdRoute
@@ -180,6 +194,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AppCustomersRoute
   '/settings': typeof AppSettingsRoute
   '/suspense': typeof AppSuspenseRoute
+  '/team': typeof AppTeamRoute
   '/transactions': typeof AppTransactionsRoute
   '/admin/login': typeof AdminLoginRoute
   '/': typeof AppIndexRoute
@@ -191,6 +206,7 @@ export interface FileRoutesByTo {
   '/admin/sweeps': typeof AppAdminSweepsRoute
   '/developers/api-keys': typeof AppDevelopersApiKeysRoute
   '/developers/audit': typeof AppDevelopersAuditRoute
+  '/developers/usage': typeof AppDevelopersUsageRoute
   '/developers/webhooks': typeof AppDevelopersWebhooksRoute
   '/admin': typeof AppAdminIndexRoute
   '/admin/tenants/$tenantId': typeof AppAdminTenantsTenantIdRoute
@@ -206,6 +222,7 @@ export interface FileRoutesById {
   '/_app/customers': typeof AppCustomersRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/suspense': typeof AppSuspenseRoute
+  '/_app/team': typeof AppTeamRoute
   '/_app/transactions': typeof AppTransactionsRoute
   '/admin/login': typeof AdminLoginRoute
   '/_app/': typeof AppIndexRoute
@@ -217,6 +234,7 @@ export interface FileRoutesById {
   '/_app/admin/sweeps': typeof AppAdminSweepsRoute
   '/_app/developers/api-keys': typeof AppDevelopersApiKeysRoute
   '/_app/developers/audit': typeof AppDevelopersAuditRoute
+  '/_app/developers/usage': typeof AppDevelopersUsageRoute
   '/_app/developers/webhooks': typeof AppDevelopersWebhooksRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/admin/tenants/$tenantId': typeof AppAdminTenantsTenantIdRoute
@@ -233,6 +251,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/settings'
     | '/suspense'
+    | '/team'
     | '/transactions'
     | '/admin/login'
     | '/admin/audit'
@@ -243,6 +262,7 @@ export interface FileRouteTypes {
     | '/admin/sweeps'
     | '/developers/api-keys'
     | '/developers/audit'
+    | '/developers/usage'
     | '/developers/webhooks'
     | '/admin/'
     | '/admin/tenants/$tenantId'
@@ -256,6 +276,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/settings'
     | '/suspense'
+    | '/team'
     | '/transactions'
     | '/admin/login'
     | '/'
@@ -267,6 +288,7 @@ export interface FileRouteTypes {
     | '/admin/sweeps'
     | '/developers/api-keys'
     | '/developers/audit'
+    | '/developers/usage'
     | '/developers/webhooks'
     | '/admin'
     | '/admin/tenants/$tenantId'
@@ -281,6 +303,7 @@ export interface FileRouteTypes {
     | '/_app/customers'
     | '/_app/settings'
     | '/_app/suspense'
+    | '/_app/team'
     | '/_app/transactions'
     | '/admin/login'
     | '/_app/'
@@ -292,6 +315,7 @@ export interface FileRouteTypes {
     | '/_app/admin/sweeps'
     | '/_app/developers/api-keys'
     | '/_app/developers/audit'
+    | '/_app/developers/usage'
     | '/_app/developers/webhooks'
     | '/_app/admin/'
     | '/_app/admin/tenants/$tenantId'
@@ -349,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTransactionsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/team': {
+      id: '/_app/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/suspense': {
       id: '/_app/suspense'
       path: '/suspense'
@@ -396,6 +427,13 @@ declare module '@tanstack/react-router' {
       path: '/developers/webhooks'
       fullPath: '/developers/webhooks'
       preLoaderRoute: typeof AppDevelopersWebhooksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/developers/usage': {
+      id: '/_app/developers/usage'
+      path: '/developers/usage'
+      fullPath: '/developers/usage'
+      preLoaderRoute: typeof AppDevelopersUsageRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/developers/audit': {
@@ -477,6 +515,7 @@ interface AppRouteChildren {
   AppCustomersRoute: typeof AppCustomersRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSuspenseRoute: typeof AppSuspenseRoute
+  AppTeamRoute: typeof AppTeamRoute
   AppTransactionsRoute: typeof AppTransactionsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminAuditRoute: typeof AppAdminAuditRoute
@@ -487,6 +526,7 @@ interface AppRouteChildren {
   AppAdminSweepsRoute: typeof AppAdminSweepsRoute
   AppDevelopersApiKeysRoute: typeof AppDevelopersApiKeysRoute
   AppDevelopersAuditRoute: typeof AppDevelopersAuditRoute
+  AppDevelopersUsageRoute: typeof AppDevelopersUsageRoute
   AppDevelopersWebhooksRoute: typeof AppDevelopersWebhooksRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAdminTenantsTenantIdRoute: typeof AppAdminTenantsTenantIdRoute
@@ -499,6 +539,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCustomersRoute: AppCustomersRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSuspenseRoute: AppSuspenseRoute,
+  AppTeamRoute: AppTeamRoute,
   AppTransactionsRoute: AppTransactionsRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminAuditRoute: AppAdminAuditRoute,
@@ -509,6 +550,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminSweepsRoute: AppAdminSweepsRoute,
   AppDevelopersApiKeysRoute: AppDevelopersApiKeysRoute,
   AppDevelopersAuditRoute: AppDevelopersAuditRoute,
+  AppDevelopersUsageRoute: AppDevelopersUsageRoute,
   AppDevelopersWebhooksRoute: AppDevelopersWebhooksRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppAdminTenantsTenantIdRoute: AppAdminTenantsTenantIdRoute,

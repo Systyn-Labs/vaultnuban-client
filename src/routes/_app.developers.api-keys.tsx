@@ -29,9 +29,15 @@ function APIKeysPage() {
   const keys = page.data ?? [];
 
   const create = useMutation({
-    mutationFn: () => vn().apiKeys.create(),
+    // The published SDK's typed apiKeys.create() still predates the API's
+    // real response field name (api_key, not key) — until the SDK is
+    // republished, post through the low-level client with the correct shape.
+    mutationFn: () =>
+      vn().http.post<{ id: string; prefix: string; api_key: string; created_at: string }>(
+        "/v1/api-keys",
+      ),
     onSuccess: (k) => {
-      if (k.key) setRevealed(k.key);
+      setRevealed(k.api_key);
       qc.invalidateQueries({ queryKey: ["api-keys"] });
     },
     onError: (e) =>

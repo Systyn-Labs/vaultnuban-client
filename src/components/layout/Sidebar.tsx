@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   Wallet,
   Users,
+  UserPlus,
   ScrollText,
   ShieldAlert,
   Circle,
@@ -16,6 +17,7 @@ import {
   Scale,
   SlidersHorizontal,
   ShieldCheck,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession, type Role } from "@/data/session";
@@ -57,23 +59,31 @@ const opsGroups: Group[] = [
       { to: "/developers/audit", label: "Audit Trail", icon: ScrollText },
     ],
   },
+  {
+    label: "Team",
+    items: [{ to: "/team", label: "Team members", icon: UserPlus }],
+  },
+  {
+    label: "Developers",
+    items: [{ to: "/developers/usage", label: "API Usage", icon: BarChart3 }],
+  },
 ];
 
+// dev deliberately has no Audit Trail or Virtual Accounts (ops-only), and no
+// Team link (only ops can invite members) — see internal/api/server.go's
+// RequireTenantRole("ops") on the matching backend routes.
 const devGroups: Group[] = [
   {
     label: "Developers",
     items: [
       { to: "/developers/api-keys", label: "API Keys", icon: KeyRound },
+      { to: "/developers/usage", label: "API Usage", icon: BarChart3 },
       { to: "/developers/webhooks", label: "Webhooks", icon: Webhook },
-      { to: "/developers/audit", label: "Audit Trail", icon: ScrollText },
     ],
   },
   {
     label: "Reference",
-    items: [
-      { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-      { to: "/accounts", label: "Virtual Accounts", icon: Wallet },
-    ],
+    items: [{ to: "/transactions", label: "Transactions", icon: ArrowLeftRight }],
   },
 ];
 

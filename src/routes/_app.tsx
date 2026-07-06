@@ -73,16 +73,32 @@ function LayoutComponent() {
 
   // Instant refresh: subscribe once per tenant session to the SSE stream so
   // webhook/sweep-posted transactions refetch immediately instead of waiting
-  // on the next poll. Only tenant sessions (ops/dev) hold an apiKey — admin
-  // has nothing to subscribe to.
+  // on the next poll. Only tenant sessions (ops/dev) have anything to
+  // subscribe to — admin has no transaction stream. Gate on role, not on
+  // apiKey presence: a tenant with zero active API keys is still a fully
+  // authenticated tenant session via X-User-Session.
   useEffect(() => {
-    if (!hydrated || !session?.apiKey) return;
+    if (!hydrated || !session || session.role === "admin") return;
     return subscribeToTransactionEvents(queryClient);
-  }, [hydrated, session?.apiKey, queryClient]);
+  }, [hydrated, session, queryClient]);
 
+  // Route components fire their data queries (which call vn()/adminHttp())
+  // as soon as they mount — before zustand's persist middleware has finished
+  // reading sessionStorage, `session` is still null even for a genuinely
+  // logged-in user (see the comment on Route.beforeLoad above). Withholding
+  // the Outlet until hydration completes keeps every query from ever
+  // running against a not-yet-hydrated session.
   return (
     <AppShell>
-      <Outlet />
+      {hydrated ? (
+        <Outlet />
+      ) : (
+        <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-8 md:py-8">
+          <div className="h-28 animate-pulse border bg-surface" />
+          <div className="mt-6 h-32 animate-pulse border bg-surface" />
+          <div className="mt-6 h-96 animate-pulse border bg-surface" />
+        </div>
+      )}
     </AppShell>
   );
 }

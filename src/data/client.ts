@@ -2,17 +2,32 @@ import { VaultNuban } from "@systynlabs/vaultnuban";
 import { API_BASE_URL, useSession } from "./session";
 import { AdminHttpClient } from "./adminHttp";
 
-// One SDK instance per API key. The dashboard dogfoods the official
-// @systynlabs/vaultnuban SDK for every tenant-scoped (/v1/*) call.
-let cached: { key: string; userSessionToken?: string; client: VaultNuban } | null = null;
+// One SDK instance per user session. The dashboard dogfoods the official
+// @systynlabs/vaultnuban SDK for every tenant-scoped (/v1/*) call, but
+// deliberately never authenticates with the tenant's real API key — that
+// key is a server-to-server credential for the tenant's own backend, and
+// revoking/rotating it must not affect a logged-in dashboard user. The
+// backend resolves the tenant from X-User-Session when present, ahead of
+// the Authorization header (see vaultnuban's Auth() middleware), so this
+// placeholder string is never treated as a credential — it only exists to
+// satisfy the SDK constructor's non-empty apiKey requirement.
+const SESSION_AUTH_PLACEHOLDER = "dashboard-session-auth";
+
+let cached: { userSessionToken: string; client: VaultNuban } | null = null;
 
 export function vn(): VaultNuban {
   const session = useSession.getState().session;
-  const key = session?.apiKey;
-  if (!key) throw new Error("Not authenticated as a tenant user");
   const userSessionToken = session?.userSessionToken;
-  if (cached?.key !== key || cached?.userSessionToken !== userSessionToken) {
-    cached = { key, userSessionToken, client: new VaultNuban({ apiKey: key, userSessionToken, baseUrl: API_BASE_URL }) };
+  if (!userSessionToken) throw new Error("Not authenticated as a tenant user");
+  if (cached?.userSessionToken !== userSessionToken) {
+    cached = {
+      userSessionToken,
+      client: new VaultNuban({
+        apiKey: SESSION_AUTH_PLACEHOLDER,
+        userSessionToken,
+        baseUrl: API_BASE_URL,
+      }),
+    };
   }
   return cached.client;
 }

@@ -5,6 +5,8 @@ import { QuickActions } from "@/components/widgets/QuickActions";
 import { TransactionFeed } from "@/components/widgets/TransactionFeed";
 import { VaultAccountPanel } from "@/components/widgets/VaultAccountPanel";
 import { IntelligenceChart } from "@/components/widgets/IntelligenceChart";
+import { LedgerState } from "@/components/widgets/LedgerState";
+import { useSession } from "@/data/session";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
@@ -24,6 +26,12 @@ function Skeleton({ h = "h-32" }: { h?: string }) {
 }
 
 function DashboardHome() {
+  // Ledger invariant widget is ops-only — matches the backend's
+  // RequireTenantRole("ops") on GET /v1/ledger/health, and dev's non-default
+  // home route (see login.tsx's homeForRole), but gated explicitly here too
+  // in case a dev navigates to "/" directly.
+  const isOps = useSession((s) => s.session?.role === "ops");
+
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-8 md:py-8">
       <header className="mb-6 flex items-baseline justify-between">
@@ -41,6 +49,14 @@ function DashboardHome() {
       <Suspense fallback={<Skeleton h="h-28" />}>
         <BalanceSnapshot />
       </Suspense>
+
+      {isOps && (
+        <div className="mt-6">
+          <Suspense fallback={<Skeleton h="h-28" />}>
+            <LedgerState />
+          </Suspense>
+        </div>
+      )}
 
       <div className="mt-6">
         <QuickActions />

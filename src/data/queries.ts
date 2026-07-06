@@ -99,6 +99,50 @@ export const mfaStatusQuery = queryOptions({
   queryFn: () => vn().mfa.status(),
 });
 
+// Team, usage, and ledger endpoints are new and not yet in the published
+// SDK — reached via the low-level http client, same pattern already used
+// for the customer-identity fix in _app.customers.tsx.
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  mfa_enabled: boolean;
+  created_at: string;
+}
+
+export const teamQuery = queryOptions({
+  queryKey: ["team"],
+  queryFn: () => vn().http.get<{ data: TeamMember[] }>("/v1/team"),
+});
+
+export interface APIKeyUsageRow {
+  api_key_id: string;
+  key_prefix: string;
+  created_by_name?: string;
+  usage_date: string;
+  request_count: number;
+}
+
+export const apiKeyUsageQuery = queryOptions({
+  queryKey: ["api-keys", "usage"],
+  queryFn: () => vn().http.get<{ data: APIKeyUsageRow[] }>("/v1/api-keys/usage"),
+});
+
+export interface LedgerHealth {
+  debits_kobo: number;
+  credits_kobo: number;
+  balanced: boolean;
+}
+
+export const ledgerHealthQuery = queryOptions({
+  queryKey: ["ledger", "health"],
+  queryFn: () => vn().http.get<LedgerHealth>("/v1/ledger/health"),
+  refetchInterval: 30_000,
+});
+
 export interface MfaStatus {
   enabled: boolean;
   recovery_codes_remaining: number;
