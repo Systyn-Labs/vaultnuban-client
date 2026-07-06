@@ -32,6 +32,14 @@ interface SessionState {
   setMfaEnabled: (enabled: boolean) => void;
   /** Extends the current session's server-side TTL; picks the right endpoint/header for the persona. */
   refreshSession: () => Promise<void>;
+  /**
+   * Requests a password-reset email. Resolves regardless of whether the email
+   * has an account — the API deliberately returns the same response either way
+   * (anti-enumeration), so the UI must not reveal existence.
+   */
+  requestPasswordReset: (email: string) => Promise<void>;
+  /** Completes a reset with the token from the emailed link plus the new password. */
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
 }
 
 // `persist` reads sessionStorage asynchronously in the background starting
@@ -131,6 +139,33 @@ export const useSession = create<SessionState>()(
         set((s) =>
           s.session ? { session: { ...s.session, sessionExpiresAt: body.session_expires_at } } : s,
         );
+      },
+
+      async requestPasswordReset(email) {
+        const resp = await fetch(`${API_BASE_URL}/auth/password/forgot`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        // A non-2xx here is an infrastructure/rate-limit problem, not "email
+        // doesn't exist" — the API returns 200 for both existing and unknown
+        // addresses, so we only surface genuine failures.
+        if (!resp.ok) {
+          const problem = await resp.json().catch(() => null);
+          throw new Error(problem?.detail ?? "Could not send the reset email. Please try again.");
+        }
+      },
+
+      async resetPassword(token, newPassword) {
+        const resp = await fetch(`${API_BASE_URL}/auth/password/reset`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, new_password: newPassword }),
+        });
+        if (!resp.ok) {
+          const problem = await resp.json().catch(() => null);
+          throw new Error(problem?.detail ?? "This reset link is invalid or has expired.");
+        }
       },
 
       logout() {
