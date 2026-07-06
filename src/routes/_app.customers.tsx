@@ -218,16 +218,27 @@ function CreateCustomerDialog() {
   const [open, setOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [bvn, setBvn] = useState("");
+  const [nin, setNin] = useState("");
+  const hasIdentity = bvn.length > 0 || nin.length > 0;
 
   const create = useMutation({
     // The API requires a caller-supplied external_ref (it does not generate one),
     // so the dashboard generates a stable, unique reference on the customer's
     // behalf instead of asking the operator to invent one.
     mutationFn: () =>
-      vn().customers.create({
+      // The published SDK's typed customers.create() still predates the
+      // identity/{bvn_masked,nin_masked,kyc_tier} request shape the API
+      // actually requires (it only sent flat bvn/nin fields, which the API
+      // silently ignores) — until the SDK is republished, post through the
+      // low-level client with the shape documented in openapi.yaml.
+      vn().http.post<Customer>("/v1/customers", {
         display_name: displayName,
         external_ref: `cus_${globalThis.crypto.randomUUID()}`,
-        bvn: bvn || undefined,
+        identity: {
+          bvn_masked: bvn || undefined,
+          nin_masked: nin || undefined,
+          kyc_tier: 1,
+        },
       }),
     onSuccess: (c) => {
       toast.success("Customer onboarded", { description: c.display_name });
@@ -235,6 +246,7 @@ function CreateCustomerDialog() {
       setOpen(false);
       setDisplayName("");
       setBvn("");
+      setNin("");
     },
     onError: (e) =>
       toast.error("Onboarding failed", { description: e instanceof Error ? e.message : undefined }),
@@ -272,7 +284,7 @@ function CreateCustomerDialog() {
             </p>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="bvn">BVN (optional)</Label>
+            <Label htmlFor="bvn">BVN</Label>
             <Input
               id="bvn"
               inputMode="numeric"
@@ -280,9 +292,26 @@ function CreateCustomerDialog() {
               value={bvn}
               onChange={(e) => setBvn(e.target.value.replace(/\D/g, ""))}
             />
-            <p className="text-[11px] text-muted-foreground">Raises the customer's KYC ceiling.</p>
           </div>
-          <Button type="submit" className="w-full gap-1.5" disabled={create.isPending}>
+          <div className="space-y-1.5">
+            <Label htmlFor="nin">NIN</Label>
+            <Input
+              id="nin"
+              inputMode="numeric"
+              maxLength={11}
+              value={nin}
+              onChange={(e) => setNin(e.target.value.replace(/\D/g, ""))}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              At least one of BVN or NIN is required to establish the customer's identity and KYC
+              ceiling.
+            </p>
+          </div>
+          <Button
+            type="submit"
+            className="w-full gap-1.5"
+            disabled={create.isPending || !hasIdentity}
+          >
             {create.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             Onboard
           </Button>
