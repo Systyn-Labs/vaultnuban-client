@@ -1,14 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Send, Inbox, UserPlus, ScrollText } from "lucide-react";
-import { useUi } from "@/state/uiStore";
+import { Inbox, UserPlus, ScrollText } from "lucide-react";
 
 const actions = [
-  {
-    label: "Send money",
-    icon: Send,
-    onClick: "send" as const,
-    hint: "Withdraw to any bank account",
-  },
   { label: "Request payment", icon: Inbox, to: "/collections", hint: "Create a collection" },
   {
     label: "Onboard customer",
@@ -20,7 +13,6 @@ const actions = [
 ];
 
 export function QuickActions() {
-  const openSend = useUi((s) => s.openSendMoney);
   return (
     <div className="border bg-surface">
       <div className="flex items-baseline justify-between border-b px-4 py-3">
@@ -38,21 +30,10 @@ export function QuickActions() {
               <div className="text-[11px] text-muted-foreground">{a.hint}</div>
             </>
           );
-          if (a.onClick === "send") {
-            return (
-              <button
-                key={a.label}
-                onClick={openSend}
-                className="group flex flex-col items-start bg-surface px-4 py-4 text-left transition-colors hover:bg-muted/60"
-              >
-                {inner}
-              </button>
-            );
-          }
           return (
             <Link
               key={a.label}
-              to={a.to!}
+              to={a.to}
               className="group flex flex-col items-start bg-surface px-4 py-4 text-left transition-colors hover:bg-muted/60"
             >
               {inner}

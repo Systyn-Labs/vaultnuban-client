@@ -1,8 +1,8 @@
 import { type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
-import { SendMoneyWizard } from "@/components/tx/SendMoneyWizard";
 import { TransactionDetailDrawer } from "@/components/tx/TransactionDetailDrawer";
+import { WithdrawalsDrawer } from "@/components/tx/WithdrawalsDrawer";
 import { LedgerViewDrawer } from "@/components/accounts/LedgerViewDrawer";
 import { ClientOnly } from "@/components/ClientOnly";
 import { Toaster } from "@/components/ui/sonner";
@@ -36,9 +36,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
       <ClientOnly>
-        <SendMoneyWizard />
         <TransactionDetailDrawer />
         <LedgerViewDrawer />
+        <WithdrawalsDrawer />
         <StepUpDialog />
         <SessionMonitor />
         <Toaster position="bottom-right" richColors />

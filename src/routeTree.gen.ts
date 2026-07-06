@@ -17,7 +17,6 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AppTransactionsRouteImport } from './routes/_app.transactions'
 import { Route as AppSuspenseRouteImport } from './routes/_app.suspense'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
-import { Route as AppSendRouteImport } from './routes/_app.send'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppCollectionsRouteImport } from './routes/_app.collections'
 import { Route as AppAccountsRouteImport } from './routes/_app.accounts'
@@ -71,11 +70,6 @@ const AppSuspenseRoute = AppSuspenseRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSendRoute = AppSendRouteImport.update({
-  id: '/send',
-  path: '/send',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCustomersRoute = AppCustomersRouteImport.update({
@@ -161,7 +155,6 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AppAccountsRoute
   '/collections': typeof AppCollectionsRoute
   '/customers': typeof AppCustomersRoute
-  '/send': typeof AppSendRoute
   '/settings': typeof AppSettingsRoute
   '/suspense': typeof AppSuspenseRoute
   '/transactions': typeof AppTransactionsRoute
@@ -185,7 +178,6 @@ export interface FileRoutesByTo {
   '/accounts': typeof AppAccountsRoute
   '/collections': typeof AppCollectionsRoute
   '/customers': typeof AppCustomersRoute
-  '/send': typeof AppSendRoute
   '/settings': typeof AppSettingsRoute
   '/suspense': typeof AppSuspenseRoute
   '/transactions': typeof AppTransactionsRoute
@@ -212,7 +204,6 @@ export interface FileRoutesById {
   '/_app/accounts': typeof AppAccountsRoute
   '/_app/collections': typeof AppCollectionsRoute
   '/_app/customers': typeof AppCustomersRoute
-  '/_app/send': typeof AppSendRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/suspense': typeof AppSuspenseRoute
   '/_app/transactions': typeof AppTransactionsRoute
@@ -240,7 +231,6 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/collections'
     | '/customers'
-    | '/send'
     | '/settings'
     | '/suspense'
     | '/transactions'
@@ -264,7 +254,6 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/collections'
     | '/customers'
-    | '/send'
     | '/settings'
     | '/suspense'
     | '/transactions'
@@ -290,7 +279,6 @@ export interface FileRouteTypes {
     | '/_app/accounts'
     | '/_app/collections'
     | '/_app/customers'
-    | '/_app/send'
     | '/_app/settings'
     | '/_app/suspense'
     | '/_app/transactions'
@@ -373,13 +361,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/send': {
-      id: '/_app/send'
-      path: '/send'
-      fullPath: '/send'
-      preLoaderRoute: typeof AppSendRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/customers': {
@@ -494,7 +475,6 @@ interface AppRouteChildren {
   AppAccountsRoute: typeof AppAccountsRoute
   AppCollectionsRoute: typeof AppCollectionsRoute
   AppCustomersRoute: typeof AppCustomersRoute
-  AppSendRoute: typeof AppSendRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSuspenseRoute: typeof AppSuspenseRoute
   AppTransactionsRoute: typeof AppTransactionsRoute
@@ -517,7 +497,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountsRoute: AppAccountsRoute,
   AppCollectionsRoute: AppCollectionsRoute,
   AppCustomersRoute: AppCustomersRoute,
-  AppSendRoute: AppSendRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSuspenseRoute: AppSuspenseRoute,
   AppTransactionsRoute: AppTransactionsRoute,

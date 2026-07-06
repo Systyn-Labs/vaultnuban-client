@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Lock, Loader2 } from "lucide-react";
 import { useSession, API_BASE_URL } from "@/data/session";
@@ -26,6 +27,7 @@ export function SessionMonitor() {
   const refreshSession = useSession((s) => s.refreshSession);
   const logout = useSession((s) => s.logout);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [locked, setLocked] = useState(false);
   const lastActivityRef = useRef(Date.now());
@@ -62,6 +64,7 @@ export function SessionMonitor() {
 
       if (now >= expiresAt) {
         logout();
+        queryClient.clear();
         toast.error("Your session has expired", { description: "Please log in again." });
         navigate({ to: session.role === "admin" ? "/admin/login" : "/login" });
         return;
@@ -91,7 +94,7 @@ export function SessionMonitor() {
     }, CHECK_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
-  }, [session, locked, logout, navigate, refreshSession]);
+  }, [session, locked, logout, navigate, refreshSession, queryClient]);
 
   if (!locked || !session) return null;
 
@@ -104,6 +107,7 @@ export function SessionMonitor() {
       }}
       onLogout={() => {
         logout();
+        queryClient.clear();
         navigate({ to: session.role === "admin" ? "/admin/login" : "/login" });
       }}
     />

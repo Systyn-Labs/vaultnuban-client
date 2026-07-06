@@ -1,25 +1,25 @@
 import { create } from "zustand";
 
 interface UiState {
-  sendMoneyOpen: boolean;
   detailTxId: string | null;
   statementCustomerId: string | null;
-  openSendMoney: () => void;
-  closeSendMoney: () => void;
+  withdrawalsCustomerId: string | null;
   openDetail: (id: string) => void;
   closeDetail: () => void;
   openStatement: (customerId: string) => void;
   closeStatement: () => void;
+  openWithdrawals: (customerId: string) => void;
+  closeWithdrawals: () => void;
 }
 
 export const useUi = create<UiState>((set) => ({
-  sendMoneyOpen: false,
   detailTxId: null,
   statementCustomerId: null,
-  openSendMoney: () => set({ sendMoneyOpen: true }),
-  closeSendMoney: () => set({ sendMoneyOpen: false }),
+  withdrawalsCustomerId: null,
   openDetail: (id) => set({ detailTxId: id }),
   closeDetail: () => set({ detailTxId: null }),
   openStatement: (customerId) => set({ statementCustomerId: customerId }),
   closeStatement: () => set({ statementCustomerId: null }),
+  openWithdrawals: (customerId) => set({ withdrawalsCustomerId: customerId }),
+  closeWithdrawals: () => set({ withdrawalsCustomerId: null }),
 }));

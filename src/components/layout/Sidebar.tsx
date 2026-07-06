@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutGrid,
   ArrowLeftRight,
-  Send,
   Wallet,
   Users,
   ScrollText,
@@ -41,7 +40,6 @@ const opsGroups: Group[] = [
     label: "Money",
     items: [
       { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-      { to: "/send", label: "Send Money", icon: Send },
       { to: "/collections", label: "Collections", icon: Inbox },
     ],
   },

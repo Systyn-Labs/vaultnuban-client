@@ -1,9 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Plus, LogOut, Sun, Moon, MonitorSmartphone, Check, ShieldCheck } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { LogOut, Sun, Moon, MonitorSmartphone, Check, ShieldCheck } from "lucide-react";
 import { useSession } from "@/data/session";
-import { useUi } from "@/state/uiStore";
 import { useTheme, type Theme } from "@/state/theme";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +22,7 @@ const THEMES: { value: Theme; label: string; icon: React.ComponentType<{ classNa
 export function TopBar() {
   const session = useSession((s) => s.session);
   const logout = useSession((s) => s.logout);
-  const openSend = useUi((s) => s.openSendMoney);
+  const queryClient = useQueryClient();
   const theme = useTheme((s) => s.theme);
   const setTheme = useTheme((s) => s.setTheme);
   const navigate = useNavigate();
@@ -48,12 +47,6 @@ export function TopBar() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        {isTenant && session?.role === "ops" && (
-          <Button size="sm" onClick={openSend} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            New Transaction
-          </Button>
-        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="ml-1 grid h-8 w-8 place-items-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
@@ -89,6 +82,10 @@ export function TopBar() {
               onClick={() => {
                 const wasAdmin = session?.role === "admin";
                 logout();
+                // Cached tenant/admin data (balances, customer lists, audit
+                // entries, etc.) must not survive into whatever identity
+                // logs in next in this tab.
+                queryClient.clear();
                 navigate({ to: wasAdmin ? "/admin/login" : "/login" });
               }}
               className="gap-2"

@@ -44,6 +44,7 @@ function CustomersPage() {
   const { data: customerPage } = useSuspenseQuery(customersQuery);
   const { data: vaPage } = useSuspenseQuery(virtualAccountsQuery);
   const openStatement = useUi((s) => s.openStatement);
+  const openWithdrawals = useUi((s) => s.openWithdrawals);
   const qc = useQueryClient();
   const requireStepUp = useRequireStepUp();
   const customers = customerPage.data ?? [];
@@ -161,7 +162,13 @@ function CustomersPage() {
         id: "actions",
         header: () => null,
         cell: ({ row }) => (
-          <div className="text-right">
+          <div className="flex items-center justify-end gap-3 text-right">
+            <button
+              onClick={() => openWithdrawals(row.original.id)}
+              className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+            >
+              Withdrawals →
+            </button>
             <button
               onClick={() => openStatement(row.original.id)}
               className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
@@ -172,7 +179,7 @@ function CustomersPage() {
         ),
       },
     ],
-    [vaByCustomer, provision, setTier, openStatement],
+    [vaByCustomer, provision, setTier, openStatement, openWithdrawals],
   );
 
   return (
