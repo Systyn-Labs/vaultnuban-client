@@ -74,6 +74,15 @@ function AdminSuspensePage() {
       ),
     },
     {
+      accessorKey: "tenant_name",
+      header: ({ column }) => <SortableHeader column={column}>Tenant</SortableHeader>,
+      cell: ({ row }) => (
+        <span className="block max-w-[180px] truncate text-[12px]">
+          {row.original.tenant_name || "No tenant on file"}
+        </span>
+      ),
+    },
+    {
       accessorKey: "reason",
       header: ({ column }) => <SortableHeader column={column}>Reason</SortableHeader>,
       cell: ({ row }) => (

@@ -11,13 +11,25 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { tenantDetailQuery, tenantTierLimitsQuery, tenantUsersQuery } from "@/data/queries";
+import type { ColumnDef } from "@tanstack/react-table";
+import {
+  tenantDetailQuery,
+  tenantTierLimitsQuery,
+  tenantUsersQuery,
+  type TenantDetailCustomer,
+  type TenantDetailTransaction,
+  type TenantDetailSuspenseItem,
+  type TenantDetailVirtualAccount,
+  type TenantDetailAuditEntry,
+} from "@/data/queries";
 import { adminHttp } from "@/data/client";
 import { useRequireStepUp } from "@/components/auth/StepUpProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatDateTime } from "@/lib/format";
+import { DataTable, SortableHeader } from "@/components/ui/data-table";
+import { StatusPill } from "@/components/tx/StatusPill";
+import { formatDateTime, formatNaira } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/admin/tenants/$tenantId")({
   head: () => ({ meta: [{ title: "Tenant · VaultNUBAN" }] }),
@@ -32,7 +44,17 @@ export const Route = createFileRoute("/_app/admin/tenants/$tenantId")({
 
 function TenantDetailPage() {
   const { tenantId } = useParams({ from: "/_app/admin/tenants/$tenantId" });
-  const { data } = useSuspenseQuery(tenantDetailQuery(tenantId));
+  const { data: rawData } = useSuspenseQuery(tenantDetailQuery(tenantId));
+  // Guard against the backend returning JSON null instead of [] for a
+  // brand-new tenant with zero rows in one of these tables.
+  const data = {
+    ...rawData,
+    customers: rawData.customers ?? [],
+    transactions: rawData.transactions ?? [],
+    suspense: rawData.suspense ?? [],
+    virtual_accounts: rawData.virtual_accounts ?? [],
+    audit: rawData.audit ?? [],
+  };
   const { data: tierData } = useSuspenseQuery(tenantTierLimitsQuery(tenantId));
   const qc = useQueryClient();
   const requireStepUp = useRequireStepUp();
@@ -160,54 +182,285 @@ function TenantDetailPage() {
         <UsersPanel tenantId={tenantId} />
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <Section title={`Customers (${data.customers.length})`} items={data.customers} />
-        <Section title={`Transactions (${data.transactions.length})`} items={data.transactions} />
-        <Section title={`Suspense (${data.suspense.length})`} items={data.suspense} />
-        <Section
-          title={`Virtual accounts (${data.virtual_accounts.length})`}
-          items={data.virtual_accounts}
-        />
-      </div>
+      <div className="mt-6 space-y-6">
+        <section>
+          <h2 className="mb-2 text-[13px] font-medium">Customers ({data.customers.length})</h2>
+          <DataTable
+            columns={customerColumns}
+            data={data.customers}
+            searchPlaceholder="Search customers…"
+            initialSorting={[{ id: "created_at", desc: true }]}
+            emptyState={
+              <div className="border bg-surface px-4 py-12 text-center text-[12px] text-muted-foreground">
+                No customers yet.
+              </div>
+            }
+          />
+        </section>
 
-      <section className="mt-6">
-        <h2 className="mb-2 text-[13px] font-medium">Audit trail</h2>
-        <div className="border bg-surface">
-          {data.audit.length === 0 ? (
-            <div className="px-4 py-8 text-center text-[12px] text-muted-foreground">
-              No audit entries yet.
-            </div>
-          ) : (
-            <ul className="divide-y">
-              {data.audit.map((e) => (
-                <li key={e.id} className="px-4 py-2.5 text-[12px]">
-                  <span className="font-medium">{e.actor}</span>{" "}
-                  <span className="text-muted-foreground">{e.action}</span>{" "}
-                  <span className="tabular text-muted-foreground">· {formatDateTime(e.at)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+        <section>
+          <h2 className="mb-2 text-[13px] font-medium">
+            Transactions ({data.transactions.length})
+          </h2>
+          <DataTable
+            columns={transactionColumns}
+            data={data.transactions}
+            searchPlaceholder="Search transactions…"
+            initialSorting={[{ id: "occurred_at", desc: true }]}
+            emptyState={
+              <div className="border bg-surface px-4 py-12 text-center text-[12px] text-muted-foreground">
+                No transactions yet.
+              </div>
+            }
+          />
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-[13px] font-medium">Suspense ({data.suspense.length})</h2>
+          <DataTable
+            columns={suspenseColumns}
+            data={data.suspense}
+            searchPlaceholder="Search suspense items…"
+            initialSorting={[{ id: "created_at", desc: true }]}
+            emptyState={
+              <div className="border bg-surface px-4 py-12 text-center text-[12px] text-muted-foreground">
+                Nothing in suspense.
+              </div>
+            }
+          />
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-[13px] font-medium">
+            Virtual accounts ({data.virtual_accounts.length})
+          </h2>
+          <DataTable
+            columns={vaColumns}
+            data={data.virtual_accounts}
+            searchPlaceholder="Search virtual accounts…"
+            initialSorting={[{ id: "created_at", desc: true }]}
+            emptyState={
+              <div className="border bg-surface px-4 py-12 text-center text-[12px] text-muted-foreground">
+                No virtual accounts yet.
+              </div>
+            }
+          />
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-[13px] font-medium">Audit trail ({data.audit.length})</h2>
+          <DataTable
+            columns={auditColumns}
+            data={data.audit}
+            searchPlaceholder="Search audit trail…"
+            initialSorting={[{ id: "at", desc: true }]}
+            emptyState={
+              <div className="border bg-surface px-4 py-12 text-center text-[12px] text-muted-foreground">
+                No audit entries yet.
+              </div>
+            }
+          />
+        </section>
+      </div>
     </>
   );
 }
 
-function Section({ title, items }: { title: string; items: unknown[] }) {
-  return (
-    <div className="border bg-surface p-4">
-      <h2 className="mb-2 text-[13px] font-medium">{title}</h2>
-      {items.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground">Nothing here yet.</p>
-      ) : (
-        <pre className="tabular max-h-60 overflow-auto text-[11px] text-muted-foreground">
-          {JSON.stringify(items, null, 2)}
-        </pre>
-      )}
-    </div>
-  );
-}
+const customerColumns: ColumnDef<TenantDetailCustomer>[] = [
+  {
+    accessorKey: "display_name",
+    header: ({ column }) => <SortableHeader column={column}>Name</SortableHeader>,
+    cell: ({ row }) => <span className="font-medium">{row.original.display_name}</span>,
+  },
+  {
+    accessorKey: "external_ref",
+    header: ({ column }) => <SortableHeader column={column}>External ref</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px] text-muted-foreground">
+        {row.original.external_ref}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <SortableHeader column={column}>Status</SortableHeader>,
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
+  },
+  {
+    id: "kyc_tier",
+    accessorFn: (row) => row.identity?.kyc_tier ?? "",
+    header: ({ column }) => <SortableHeader column={column}>KYC tier</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px]">{row.original.identity?.kyc_tier ?? "—"}</span>
+    ),
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => <SortableHeader column={column}>Created</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px] text-muted-foreground">
+        {formatDateTime(row.original.created_at)}
+      </span>
+    ),
+  },
+];
+
+const transactionColumns: ColumnDef<TenantDetailTransaction>[] = [
+  {
+    accessorKey: "id",
+    header: ({ column }) => <SortableHeader column={column}>ID</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular block max-w-[160px] truncate text-[12px]">{row.original.id}</span>
+    ),
+  },
+  {
+    accessorKey: "nuban",
+    header: ({ column }) => <SortableHeader column={column}>NUBAN</SortableHeader>,
+    cell: ({ row }) => <span className="tabular text-[12px]">{row.original.nuban ?? "—"}</span>,
+  },
+  {
+    accessorKey: "direction",
+    header: ({ column }) => <SortableHeader column={column}>Direction</SortableHeader>,
+    cell: ({ row }) => <span className="capitalize">{row.original.direction}</span>,
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <SortableHeader column={column}>Status</SortableHeader>,
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
+  },
+  {
+    accessorKey: "occurred_at",
+    header: ({ column }) => <SortableHeader column={column}>Occurred</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px] text-muted-foreground">
+        {formatDateTime(row.original.occurred_at)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "amount_kobo",
+    header: ({ column }) => (
+      <SortableHeader column={column} align="right">
+        Amount
+      </SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <div className="tabular text-right">{formatNaira(row.original.amount_kobo)}</div>
+    ),
+  },
+];
+
+const suspenseColumns: ColumnDef<TenantDetailSuspenseItem>[] = [
+  {
+    accessorKey: "transaction_id",
+    header: ({ column }) => <SortableHeader column={column}>Transaction</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular block max-w-[160px] truncate text-[12px]">
+        {row.original.transaction_id}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "reason",
+    header: ({ column }) => <SortableHeader column={column}>Reason</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="capitalize">{row.original.reason?.replace(/_/g, " ")}</span>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <SortableHeader column={column}>Status</SortableHeader>,
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => <SortableHeader column={column}>Received</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px] text-muted-foreground">
+        {formatDateTime(row.original.created_at)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "amount_kobo",
+    header: ({ column }) => (
+      <SortableHeader column={column} align="right">
+        Amount
+      </SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <div className="tabular text-right">{formatNaira(row.original.amount_kobo)}</div>
+    ),
+  },
+];
+
+const vaColumns: ColumnDef<TenantDetailVirtualAccount>[] = [
+  {
+    accessorKey: "account_name",
+    header: ({ column }) => <SortableHeader column={column}>Account name</SortableHeader>,
+    cell: ({ row }) => <span className="font-medium">{row.original.account_name}</span>,
+  },
+  {
+    accessorKey: "nuban",
+    header: ({ column }) => <SortableHeader column={column}>NUBAN</SortableHeader>,
+    cell: ({ row }) => <span className="tabular text-[12px]">{row.original.nuban}</span>,
+  },
+  {
+    accessorKey: "bank_name",
+    header: ({ column }) => <SortableHeader column={column}>Bank</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="text-[12px] text-muted-foreground">{row.original.bank_name}</span>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <SortableHeader column={column}>Status</SortableHeader>,
+    cell: ({ row }) => <StatusPill status={row.original.status} />,
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => <SortableHeader column={column}>Created</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px] text-muted-foreground">
+        {formatDateTime(row.original.created_at)}
+      </span>
+    ),
+  },
+];
+
+const auditColumns: ColumnDef<TenantDetailAuditEntry>[] = [
+  {
+    accessorKey: "actor",
+    header: ({ column }) => <SortableHeader column={column}>Actor</SortableHeader>,
+    cell: ({ row }) => <span className="font-medium">{row.original.actor}</span>,
+  },
+  {
+    accessorKey: "action",
+    header: ({ column }) => <SortableHeader column={column}>Action</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="text-muted-foreground">{row.original.action}</span>
+    ),
+  },
+  {
+    accessorKey: "entity_type",
+    header: ({ column }) => <SortableHeader column={column}>Entity</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px] text-muted-foreground">
+        {row.original.entity_type}
+        {row.original.entity_id ? `:${row.original.entity_id.slice(0, 8)}` : ""}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "at",
+    header: ({ column }) => <SortableHeader column={column}>When</SortableHeader>,
+    cell: ({ row }) => (
+      <span className="tabular text-[12px] text-muted-foreground">
+        {formatDateTime(row.original.at)}
+      </span>
+    ),
+  },
+];
 
 function UsersPanel({ tenantId }: { tenantId: string }) {
   const { data } = useSuspenseQuery(tenantUsersQuery(tenantId));

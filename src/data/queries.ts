@@ -187,20 +187,76 @@ export interface TenantSummary {
   [k: string]: unknown;
 }
 
+export interface TenantDetailCustomer {
+  id: string;
+  tenant_id: string;
+  external_ref: string;
+  display_name: string;
+  status: string;
+  created_at: string;
+  identity?: {
+    id: string;
+    bvn_masked?: string;
+    nin_masked?: string;
+    kyc_tier: number;
+    verification_status: string;
+  };
+}
+
+export interface TenantDetailTransaction {
+  id: string;
+  nuban?: string;
+  amount_kobo: number;
+  amount_ngn: string;
+  direction: string;
+  source: string;
+  status: string;
+  sender_name?: string;
+  sender_bank?: string;
+  narration?: string;
+  occurred_at: string;
+}
+
+export interface TenantDetailSuspenseItem {
+  id: string;
+  transaction_id: string;
+  reason: string;
+  status: string;
+  notes?: string;
+  resolved_by?: string;
+  created_at: string;
+  amount_kobo: number;
+  nuban?: string;
+}
+
+export interface TenantDetailVirtualAccount {
+  id: string;
+  customer_id: string;
+  nuban: string;
+  bank_name: string;
+  account_name: string;
+  account_ref: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenantDetailAuditEntry {
+  id: string;
+  actor: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  at: string;
+}
+
 export interface TenantDetail {
   tenant: TenantSummary;
-  customers: unknown[];
-  transactions: unknown[];
-  suspense: unknown[];
-  virtual_accounts: unknown[];
-  audit: {
-    id: string;
-    actor: string;
-    action: string;
-    entity_type: string;
-    entity_id: string;
-    at: string;
-  }[];
+  customers: TenantDetailCustomer[] | null;
+  transactions: TenantDetailTransaction[] | null;
+  suspense: TenantDetailSuspenseItem[] | null;
+  virtual_accounts: TenantDetailVirtualAccount[] | null;
+  audit: TenantDetailAuditEntry[] | null;
 }
 
 export const tenantDetailQuery = (tenantId: string) =>
@@ -303,9 +359,11 @@ export const nombaVAsQuery = queryOptions({
 export const tierLimitsQuery = queryOptions({
   queryKey: ["internal", "tier-limits"],
   queryFn: () =>
-    adminHttp().get<Record<string, { daily_credit_kobo: number; max_balance_kobo: number }>>(
-      "/internal/settings/tier-limits",
-    ),
+    adminHttp()
+      .get<{ key: string; value: Record<string, { daily_credit_kobo: number; max_balance_kobo: number }> }>(
+        "/internal/settings/tier-limits",
+      )
+      .then((r) => r.value),
 });
 
 /** Normalize endpoints that may return either a bare array or {data: []}. */

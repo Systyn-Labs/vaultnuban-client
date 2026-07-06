@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Download, Loader2, ShieldCheck, ShieldOff } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { mfaStatusQuery } from "@/data/queries";
 import { vn } from "@/data/client";
@@ -33,7 +34,8 @@ function SecuritySettingsPage() {
         <h1 className="mt-1 text-xl font-medium tracking-tight">Security</h1>
         <p className="mt-1 text-[12px] text-muted-foreground">
           Two-factor authentication is required to provision, rename, suspend, or close a virtual
-          account, and to initiate withdrawals. There is no way to disable it once enrolled.
+          account, and to initiate withdrawals. You can disable it, but you'll need to re-enroll
+          before you can perform any of those actions again.
         </p>
       </header>
 
@@ -50,7 +52,10 @@ function EnrolledPanel({ recoveryCodesRemaining }: { recoveryCodesRemaining: num
   const [regenerating, setRegenerating] = useState(false);
   const [code, setCode] = useState("");
   const [newCodes, setNewCodes] = useState<string[] | null>(null);
+  const [disableOpen, setDisableOpen] = useState(false);
+  const [disableCode, setDisableCode] = useState("");
   const qc = useQueryClient();
+  const setMfaEnabled = useSession((s) => s.setMfaEnabled);
 
   const regenerate = useMutation({
     mutationFn: () => vn().mfa.regenerateRecoveryCodes({ code }),
@@ -63,6 +68,22 @@ function EnrolledPanel({ recoveryCodesRemaining }: { recoveryCodesRemaining: num
       toast.error("Could not regenerate recovery codes", {
         description: e instanceof Error ? e.message : undefined,
       }),
+  });
+
+  const disable = useMutation({
+    mutationFn: () =>
+      vn().http.post<{ enabled: boolean }>("/v1/mfa/disable", { code: disableCode }),
+    onSuccess: () => {
+      toast.success("Two-factor authentication disabled", {
+        description: "Re-enroll before provisioning/managing accounts or withdrawing funds.",
+      });
+      setMfaEnabled(false);
+      setDisableOpen(false);
+      setDisableCode("");
+      qc.invalidateQueries({ queryKey: mfaStatusQuery.queryKey });
+    },
+    onError: (e) =>
+      toast.error("Invalid code", { description: e instanceof Error ? e.message : undefined }),
   });
 
   return (
@@ -105,10 +126,62 @@ function EnrolledPanel({ recoveryCodesRemaining }: { recoveryCodesRemaining: num
           </div>
         </div>
       ) : (
-        <Button size="sm" variant="secondary" onClick={() => setRegenerating(true)}>
-          Regenerate recovery codes
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setRegenerating(true)}>
+            Regenerate recovery codes
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-status-failed hover:text-status-failed"
+            onClick={() => setDisableOpen(true)}
+          >
+            Disable two-factor authentication
+          </Button>
+        </div>
       )}
+
+      <Dialog open={disableOpen} onOpenChange={setDisableOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">Disable two-factor authentication?</DialogTitle>
+          </DialogHeader>
+          <p className="text-[12px] text-muted-foreground">
+            You won't be able to provision or manage virtual accounts, or initiate withdrawals,
+            until you re-enroll.
+          </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="disable-code">Enter a current authenticator or recovery code</Label>
+            <Input
+              id="disable-code"
+              placeholder="123456"
+              value={disableCode}
+              onChange={(e) => setDisableCode(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => {
+                setDisableOpen(false);
+                setDisableCode("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1 gap-1.5"
+              disabled={disable.isPending || disableCode.length === 0}
+              onClick={() => disable.mutate()}
+            >
+              {disable.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Disable
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

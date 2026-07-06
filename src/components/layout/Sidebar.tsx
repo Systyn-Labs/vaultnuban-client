@@ -14,7 +14,6 @@ import {
   HeartPulse,
   Building2,
   RefreshCw,
-  Scale,
   SlidersHorizontal,
   ShieldCheck,
   BarChart3,
@@ -101,7 +100,6 @@ const adminGroups: Group[] = [
     items: [
       { to: "/admin/sweeps", label: "Sweep Runs", icon: RefreshCw },
       { to: "/admin/suspense", label: "Suspense", icon: ShieldAlert },
-      { to: "/admin/recon", label: "VA Reconciliation", icon: Scale },
     ],
   },
   {
