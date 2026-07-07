@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Sun, Moon, MonitorSmartphone, Check, ShieldCheck } from "lucide-react";
 import { useSession } from "@/data/session";
 import { useTheme, type Theme } from "@/state/theme";
+import { DemoMfaBadge } from "@/components/auth/DemoMfaBadge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +48,7 @@ export function TopBar() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <DemoMfaBadge />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="ml-1 grid h-8 w-8 place-items-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
