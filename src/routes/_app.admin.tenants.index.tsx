@@ -114,7 +114,6 @@ function OnboardTenantDialog() {
   const [tenantName, setTenantName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [role, setRole] = useState("ops");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [copied, setCopied] = useState(false);
@@ -122,8 +121,10 @@ function OnboardTenantDialog() {
   const onboard = useMutation({
     mutationFn: () =>
       adminHttp().post<Record<string, unknown>>("/internal/tenants", {
-        tenant_name: tenantName,
-        users: [{ name, email, password, role }],
+        company_name: tenantName,
+        name,
+        email,
+        role,
       }),
     onSuccess: (r) => {
       setResult(r);
@@ -154,31 +155,52 @@ function OnboardTenantDialog() {
         </DialogHeader>
         {result ? (
           <div className="space-y-3">
-            <p className="text-[12px] text-muted-foreground">
-              Tenant onboarded — copy the API key now. It is shown once and cannot be retrieved
-              again.
-            </p>
-            <div className="flex items-center gap-2 border bg-surface-muted p-3">
-              <code className="tabular flex-1 overflow-x-auto whitespace-nowrap text-[11px]">
-                {String(result.api_key ?? "")}
-              </code>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="shrink-0 gap-1.5"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(String(result.api_key ?? ""));
-                  setCopied(true);
-                }}
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {copied ? "Copied" : "Copy"}
-              </Button>
+            {result.email_sent === false ? (
+              <div className="border border-status-failed/40 bg-status-failed-soft p-3 text-[12px] text-status-failed">
+                Tenant created, but the welcome email could not be sent. Share these credentials
+                with <span className="font-medium">{String(result.email ?? "")}</span> manually —
+                they won't be shown again.
+              </div>
+            ) : (
+              <p className="text-[12px] text-muted-foreground">
+                Tenant onboarded. A welcome email with login details, a temporary password, and the
+                API key was sent to{" "}
+                <span className="text-foreground">{String(result.email ?? "")}</span>. They'll be
+                required to change the password on first sign-in.
+              </p>
+            )}
+
+            {result.email_sent === false && (
+              <div className="space-y-1.5 border bg-surface-muted p-3 text-[11px]">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Temporary password</span>
+                  <code className="tabular">{String(result.temp_password ?? "")}</code>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <span className="text-[11px] text-muted-foreground">
+                API key {result.email_sent === false ? "" : "(for your reference)"}
+              </span>
+              <div className="flex items-center gap-2 border bg-surface-muted p-3">
+                <code className="tabular flex-1 overflow-x-auto whitespace-nowrap text-[11px]">
+                  {String(result.api_key ?? "")}
+                </code>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 gap-1.5"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(String(result.api_key ?? ""));
+                    setCopied(true);
+                  }}
+                >
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+              </div>
             </div>
             <Button className="w-full" onClick={() => setOpen(false)}>
               Done
@@ -214,16 +236,10 @@ function OnboardTenantDialog() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="upass">Temporary password</Label>
-              <Input
-                id="upass"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <p className="text-[11px] text-muted-foreground">
+                We'll email them a temporary password and their API key. They must change the
+                password on first sign-in.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Dashboard role</Label>

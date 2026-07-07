@@ -18,6 +18,7 @@ export interface Session {
   adminSessionToken?: string; // per-admin session (X-Admin-Session), admin persona only
   mfaEnabled: boolean;
   sessionExpiresAt?: string; // ISO timestamp — drives the expiry warning
+  mustChangePassword?: boolean; // onboarded user on a temporary password — gated until changed
 }
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -40,6 +41,11 @@ interface SessionState {
   requestPasswordReset: (email: string) => Promise<void>;
   /** Completes a reset with the token from the emailed link plus the new password. */
   resetPassword: (token: string, newPassword: string) => Promise<void>;
+  /**
+   * Changes the logged-in tenant user's password (first-login forced change or
+   * self-service). Clears the local mustChangePassword gate on success.
+   */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 // `persist` reads sessionStorage asynchronously in the background starting
@@ -89,6 +95,7 @@ export const useSession = create<SessionState>()(
           userSessionToken: body.user_session_token,
           mfaEnabled: Boolean(body.mfa_enabled),
           sessionExpiresAt: body.session_expires_at,
+          mustChangePassword: Boolean(body.must_change_password),
         };
         set({ session });
         return session;
@@ -166,6 +173,22 @@ export const useSession = create<SessionState>()(
           const problem = await resp.json().catch(() => null);
           throw new Error(problem?.detail ?? "This reset link is invalid or has expired.");
         }
+      },
+
+      async changePassword(currentPassword, newPassword) {
+        const token = useSession.getState().session?.userSessionToken;
+        if (!token) throw new Error("Not authenticated");
+        const resp = await fetch(`${API_BASE_URL}/v1/password/change`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-User-Session": token },
+          body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+        });
+        if (!resp.ok) {
+          const problem = await resp.json().catch(() => null);
+          throw new Error(problem?.detail ?? "Could not change your password.");
+        }
+        // Clear the local gate so the auth guard stops redirecting to /change-password.
+        set((s) => (s.session ? { session: { ...s.session, mustChangePassword: false } } : s));
       },
 
       logout() {

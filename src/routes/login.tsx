@@ -26,7 +26,11 @@ function LoginPage() {
     setError(null);
     try {
       const session = await login(email, password);
-      navigate({ to: homeForRole(session.role) });
+      if (session.mustChangePassword) {
+        navigate({ to: "/change-password" });
+      } else {
+        navigate({ to: homeForRole(session.role) });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {

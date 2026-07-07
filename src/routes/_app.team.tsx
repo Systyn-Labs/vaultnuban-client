@@ -126,25 +126,34 @@ function InviteMemberDialog() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [role, setRole] = useState<"dev" | "ops">("dev");
 
   const invite = useMutation({
     mutationFn: async () => {
       const stepUpToken = await requireStepUp();
-      return vn().http.post<{ email: string; role: string }>(
-        "/v1/team",
-        { name, email, password, role },
-        { stepUpToken },
-      );
+      return vn().http.post<{
+        email: string;
+        role: string;
+        email_sent?: boolean;
+        temp_password?: string;
+      }>("/v1/team", { name, email, role }, { stepUpToken });
     },
     onSuccess: (m) => {
-      toast.success("Team member invited", { description: `${m.email} · ${m.role}` });
+      if (m.email_sent === false) {
+        // Email didn't send — surface the temp password so ops can relay it.
+        toast.warning("Invited, but the welcome email failed to send", {
+          description: `Share this temporary password with ${m.email}: ${m.temp_password ?? ""}`,
+          duration: 30000,
+        });
+      } else {
+        toast.success("Team member invited", {
+          description: `A welcome email with sign-in details was sent to ${m.email}.`,
+        });
+      }
       qc.invalidateQueries({ queryKey: ["team"] });
       setOpen(false);
       setName("");
       setEmail("");
-      setPassword("");
       setRole("dev");
     },
     onError: (e) =>
@@ -182,17 +191,10 @@ function InviteMemberDialog() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Temporary password</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <p className="text-[11px] text-muted-foreground">
+              We'll email them a temporary password and a sign-in link. They must change the
+              password on first login.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="role">Role</Label>

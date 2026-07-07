@@ -31,6 +31,9 @@ export const Route = createFileRoute("/_app")({
     if (!session) {
       throw redirect({ to: isAdminRoute ? "/admin/login" : "/login" });
     }
+    // Onboarded users on a temporary password can't enter the app until they
+    // change it. /change-password lives outside /_app, so this can't loop.
+    if (session.mustChangePassword) throw redirect({ to: "/change-password" });
     // Persona boundaries: /admin/* requires the operator role; tenant routes
     // require a tenant API key.
     if (isAdminRoute && session.role !== "admin") throw redirect({ to: "/" });
@@ -65,6 +68,10 @@ function LayoutComponent() {
     const isAdminRoute = pathname.startsWith("/admin");
     if (!session) {
       navigate({ to: isAdminRoute ? "/admin/login" : "/login" });
+      return;
+    }
+    if (session.mustChangePassword) {
+      navigate({ to: "/change-password" });
       return;
     }
     if (isAdminRoute && session.role !== "admin") navigate({ to: "/" });
